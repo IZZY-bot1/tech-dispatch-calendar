@@ -33,24 +33,28 @@
 </section>
 
 <!-- ===== APP ===== -->
-<div class="wrap" id="appView" hidden>
+<div class="shell" id="appView" hidden>
+<aside class="side admin-only" aria-label="Main menu">
+  <div class="brand">Greenlight<small>Dispatch</small></div>
+  <nav class="nav">
+    <button class="navb" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
+    <button class="navb" data-atab="cal" aria-pressed="false">▤ Calendar</button>
+    <button class="navb" id="techBtn">☻ Manage technicians</button>
+    <button class="navb" id="dlBtn">⭳ Download jobs</button>
+  </nav>
+  <div class="sidefoot"><span class="note" id="whoami2"></span><button class="navb" data-signout>⎋ Sign out</button></div>
+</aside>
+<div class="wrap">
   <header class="bar">
     <div>
       <h1 id="appTitle">Tech Dispatch Calendar</h1>
       <p class="sub" id="whoami"></p>
     </div>
     <div class="grp">
-      <button class="btn admin-only" id="techBtn">Manage technicians</button>
-      <button class="btn admin-only" id="dlBtn">Download jobs</button>
-      <button class="btn" data-signout>Sign out</button>
+      <button class="btn tech-only" data-signout>Sign out</button>
     </div>
   </header>
 
-  <div class="bar admin-only">
-    <div class="seg" role="group" aria-label="Section">
-      <button data-atab="dash" aria-pressed="true">Dashboard</button><button data-atab="cal" aria-pressed="false">Calendar</button>
-    </div>
-  </div>
   <div id="dashView" class="dash admin-only"></div>
 
   <div class="bar tech-only" id="techTabs">
@@ -89,6 +93,7 @@
     <div class="summary" id="summary"></div>
     <div class="cal"><div class="scroll" id="view"></div></div>
   </div>
+</div>
 </div>
 
 <!-- ===== CHAT ===== -->
