@@ -158,6 +158,7 @@
 @media (max-width:700px){#invDlg .row{grid-template-columns:1fr}}
 .invfilt{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}.invfilt input[type=search]{flex:1 1 220px;min-width:180px}.invfilt select,.invfilt input[type=date]{width:auto;flex:0 1 auto}.invfilt .dl{display:flex;align-items:center;gap:6px;font-size:13px}.invmore{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.nvl td:nth-child(2),.nvl td:nth-child(3){width:96px}.nvl .nvt{white-space:nowrap}
 .btn.danger{color:#ff9b8f;border-color:rgba(255,155,143,.45)}#catDlg tr.editing td{background:rgba(255,255,255,.04)}#catDlg td input,#catDlg td select{width:100%}
+body:not(.is-admin) .side{display:flex}.phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}.phgrid a{display:block;text-decoration:none;color:inherit}.phgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block}.phtag{display:block;margin-top:3px}
 </style>
 </head>
 <body>
@@ -187,15 +188,15 @@
 <aside class="side admin-only" aria-label="Main menu">
   <div class="brand">Greenlight<small>Dispatch</small></div>
   <nav class="nav">
-    <button class="navb" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
+    <button class="navb admin-only" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
     <button class="navb" data-atab="cal" aria-pressed="false">▤ Calendar</button>
     <button class="navb" id="estBtn">✎ Estimates</button>
     <button class="navb" id="ordBtn">⚒ Job orders</button>
     <button class="navb" id="invBtn">▭ Invoices</button>
-    <button class="navb" id="catBtn">☰ Service Catalog</button>
+    <button class="navb admin-only" id="catBtn">☰ Service Catalog</button>
     <button class="navb" id="cmmBtn">✉ Messages</button>
-    <button class="navb" id="techBtn">☻ Manage technicians</button>
-    <button class="navb" id="dlBtn">⭳ Download jobs</button>
+    <button class="navb admin-only" id="techBtn">☻ Manage technicians</button>
+    <button class="navb admin-only" id="dlBtn">⭳ Download jobs</button>
   </nav>
   <div class="sidefoot"><span class="note" id="whoami2"></span><button class="navb" data-signout>⎋ Sign out</button></div>
 </aside>
@@ -480,12 +481,13 @@ function printDoc(doc){var p=$('#printArea'); if(!p){toast('Print area missing')
 function render(){
  var b=$('#invBody'); if(!b) return;
  var ae=document.activeElement;
- if(!S.__force&&((ae&&b.contains(ae)&&(ae.id==='ifq'||ae.dataset.nl!==undefined))||(S.panel&&S.panel.type==='inew'&&b.querySelector('#nvCust')))){paintDash(true);return;}
+ if(!S.__force&&((ae&&b.contains(ae)&&(ae.id==='ifq'||ae.dataset.nl!==undefined))||(S.panel&&S.panel.type==='inew'&&b.querySelector('#nvCust'))||(S.panel&&S.panel.type==='iedit'&&b.querySelector('[data-el]')))){paintDash(true);return;}
  S.__force=false;
  var h='';
  if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> The estimate and service tables are not in your database yet. Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page. Existing invoices below already work.</div>';
  if(S.panel&&S.panel.type==='pay') h+=panelHtml();
  if(S.panel&&S.panel.type==='inew') h+=newInvHtml();
+ if(S.panel&&S.panel.type==='iedit') h+=editInvHtml();
  h+=invTab();
  b.innerHTML=h; paintDash(true);
 }
@@ -496,7 +498,7 @@ function estTable(limit){
   var a='<button class="btn sm" data-act="eprint" data-id="'+e.id+'">Print</button><button class="btn sm" data-act="esend" data-id="'+e.id+'">Send</button>';
   if(e.status!=='Converted') a='<button class="btn sm" data-act="eedit" data-id="'+e.id+'">Edit</button>'+a;
   if(e.status==='Draft'||e.status==='Sent') a+='<button class="btn sm" data-act="eappr" data-id="'+e.id+'">Approved</button><button class="btn sm" data-act="edecl" data-id="'+e.id+'">Declined</button>';
-  if(e.status==='Approved') a+='<button class="btn sm primary" data-act="econv" data-id="'+e.id+'">Send to job orders</button>';
+  if(e.status==='Approved'&&isAdm()) a+='<button class="btn sm primary" data-act="econv" data-id="'+e.id+'">Send to job orders</button>';
   return '<tr><td>'+estNo(e)+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(names)+'</td><td>'+money(eTotal(e.id))+'</td><td>'+pill(e.status)+'</td><td class="iacts">'+a+'</td></tr>';}).join('');
  return '<div class="scroll"><table class="tbl"><tr><th>#</th><th>Customer</th><th>Technician</th><th>Total</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(S.setup?'No estimates yet. Create one, send it, and convert it to job orders when approved.':'Estimates turn on after the one-time database setup (see the Invoices page).')+'</td></tr>')+'</table></div>';
 }
@@ -523,14 +525,14 @@ function ordPage(){
  +'<label class="dl">From <input type="date" data-of="odate" value="'+esc(S.odate)+'"></label><label class="dl">To <input type="date" data-of="odto" value="'+esc(S.odto)+'"></label>'
  +(ordHasF()?'<button class="btn sm" data-act="oclear">Clear</button>':'')+'</div>';
  var rows=list.map(function(j){var c=cust(j.customer_id);
-  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'<br><span class="note">'+esc(c.address||'No address on file')+'</span></td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
+  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'<br><span class="note">'+esc(c.address||'No address on file')+'</span></td><td>'+esc(j.svc)+'</td><td>'+(isAdm()?'<select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select>':esc(tech(j.tech_id).name||'Unassigned'))+'</td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td><td><button class="btn sm" data-act="ophoto" data-id="'+j.id+'">Photos</button></td></tr>';}).join('');
  var more='<div class="invmore"><span class="note">Showing '+list.length+' of '+all.length+'</span>'+(all.length>list.length?'<button class="btn sm" data-act="omore">Show 10 more</button><button class="btn sm" data-act="oall">Show all</button>':'')+(S.olim>10&&list.length>10?'<button class="btn sm" data-act="ofewer">Show fewer</button>':'')+'</div>';
- return '<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+bar+'<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(ordHasF()?'No job orders match your search or filters.':'No job orders yet.')+'</td></tr>')+'</table></div>'+pager(all.length,S.olim,S.opage,'o');
+ return phPanel()+'<div class="invhead"><span class="note">'+(isAdm()?'Change the technician right here; times and details are on the Calendar.':'Your assigned job orders. View only.')+'</span></div>'+bar+'<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th><th></th></tr>'+(rows||'<tr><td colspan="7" class="note">'+(ordHasF()?'No job orders match your search or filters.':'No job orders yet.')+'</td></tr>')+'</table></div>'+pager(all.length,S.olim,S.opage,'o');
 }
 function jobTable(all){
  var t0=iso(), list=all?S.jobs.slice(0,100):S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
  var rows=list.map(function(j){var c=cust(j.customer_id);
-  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
+  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+(isAdm()?'<select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select>':esc(tech(j.tech_id).name||'Unassigned'))+'</td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
  return '<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">No upcoming job orders.</td></tr>')+'</table></div>';
 }
 function invCard(){
@@ -580,8 +582,8 @@ function invTab(){
  var billed=0,paid=0; all.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
  var opts='<option value="">All customers</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===S.filter?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
  var rows=jobs.map(function(j){var c=cust(j.customer_id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
-  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm primary" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Email invoice</button><button class="btn sm primary" data-act="itext" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Text invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
- return '<div class="invhead"><h3>Invoices</h3><span class="note">Email or text the invoice to the customer once the job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+pager(all.length,S.ilim,S.ipage,'i');
+  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm primary" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Email invoice</button><button class="btn sm primary" data-act="itext" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Text invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button><button class="btn sm" data-act="iedit" data-id="'+j.id+'">Edit</button></td></tr>';}).join('');
+ return '<div class="invhead"><h3>Invoices</h3><span class="note">Email or text the invoice to the customer once the job is Completed.</span><select data-act="ifilter">'+opts+'</select>'+(isAdm()?'<button class="btn primary" data-act="inew">+ New invoice</button>':'')+'</div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+pager(all.length,S.ilim,S.ipage,'i');
 }
 function hasF(){return !!(S.ifq||S.ist||S.ipay||S.itech||S.idate||S.idto||S.filter);}
 function invFiltered(){
@@ -619,6 +621,69 @@ function moreBar(all,shown){
 function nvMatches(svc){return S.services.filter(function(x){return x.active!==false&&x.job_type===svc;});}
 function nvPick(svc){var m=nvMatches(svc); return m.length?m:S.services.filter(function(x){return x.active!==false;});}
 function nvAuto(){var P=S.panel; if(!P||P.type!=='inew') return; var l=P.lines[0]; if(!l) return; if(String(l.description||'').trim()&&!l.auto) return; var m=nvMatches(P.svc); if(m.length){l.description=m[0].name;l.unit_price=num(m[0].unit_price);l.auto=true;l.pa=true;} else if(l.auto){l.description='';l.unit_price=0;l.auto=false;}}
+function phPanel(){
+ var P=S.ph; if(!P) return '';
+ var j=S.jobs.find(function(x){return x.id===P.job_id;})||{}, c=cust(j.customer_id);
+ var items=(P.items||[]).map(function(i){return '<a href="'+esc(i.url)+'" target="_blank" rel="noopener"><img src="'+esc(i.url)+'" alt="photo" loading="lazy"><span class="note phtag">'+(i.direction==='in'?'From customer':'From team')+(i.caption?' · '+esc(i.caption):'')+'</span></a>';}).join('');
+ return '<div class="invpanel"><h3>Photos – '+esc(c.name||'')+' · '+esc(j.svc||'')+' · '+esc(longDate(j.date))+'</h3><div class="invmore"><label class="btn sm primary" style="cursor:pointer">Add photos<input id="phFile" type="file" accept="image/*" multiple hidden></label><button class="btn sm" data-act="phtext">Text photo link to customer</button><button class="btn sm" data-act="phemail">Email photo link</button><button class="btn sm" data-act="phclose">Close</button></div><p class="note">The link lets the customer see the photos you add and send photos back. Their photos show up here.</p>'+(P.busy?'<p class="note">Loading…</p>':(items?'<div class="phgrid">'+items+'</div>':'<p class="note">No photos yet.</p>'))+'</div>';
+}
+async function phLoad(){
+ var P=S.ph; if(!P) return;
+ var r=await sb.from('gl_photos').select('*').eq('job_id',P.job_id).order('created_at',{ascending:false});
+ var rows=r.data||[], items=[];
+ if(rows.length){var sg=await sb.storage.from('gl-photos').createSignedUrls(rows.map(function(x){return x.path;}),3600); var map={}; (sg.data||[]).forEach(function(x){map[x.path]=x.signedUrl;}); rows.forEach(function(x){if(map[x.path]) items.push({url:map[x.path],direction:x.direction,caption:x.caption});});}
+ if(S.ph&&S.ph.job_id===P.job_id){S.ph.items=items; S.ph.busy=false; var b=$('#ordBody'); if(b&&!(document.activeElement&&document.activeElement.id==='oq')) b.innerHTML=ordPage();}
+}
+async function phUpload(files){
+ var P=S.ph; if(!P||!files||!files.length) return; var j=S.jobs.find(function(x){return x.id===P.job_id;})||{}, n=0;
+ for(var k=0;k<files.length;k++){var f=files[k];
+  if(!/^image\//.test(f.type)) continue;
+  if(f.size>10*1024*1024){toast(f.name+' is over 10 MB'); continue;}
+  var ext=(f.type.split('/')[1]||'jpg').replace('jpeg','jpg');
+  var path=P.job_id+'/out-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.'+ext;
+  var up=await sb.storage.from('gl-photos').upload(path,f,{contentType:f.type}); if(up.error){toast(up.error.message); continue;}
+  var ins=await sb.from('gl_photos').insert({job_id:P.job_id,customer_id:j.customer_id||null,direction:'out',path:path,uploaded_by:(S.me&&S.me.id)||null}); if(ins.error){toast(ins.error.message); continue;}
+  n++;
+ }
+ if(n) toast(n+' photo'+(n>1?'s':'')+' added');
+ await phLoad();
+}
+async function phSend(kind){
+ var P=S.ph; if(!P) return; var j=S.jobs.find(function(x){return x.id===P.job_id;}); if(!j) return; var c=cust(j.customer_id);
+ var lr=await sb.from('gl_photo_links').select('token').eq('job_id',j.id).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false}).limit(1);
+ var tok=lr.data&&lr.data[0]&&lr.data[0].token;
+ if(!tok){var ins=await sb.from('gl_photo_links').insert({job_id:j.id,customer_id:j.customer_id}).select().single(); if(ins.error) return toast(ins.error.message); tok=ins.data.token;}
+ var link=location.origin+location.pathname.replace(/[^\/]*$/,'')+'photos.html?t='+tok;
+ var first=String(c.name||'').split(' ')[0]||'there';
+ var body='Hi '+first+', here is your photo link from '+C.business+' for your '+j.svc+' job: '+link+'\nYou can see our photos and send yours there.';
+ var ch='sms';
+ if(kind==='sms'){var ph=String(c.phone||'').replace(/\D/g,''); if(!ph) return toast('No phone number on file for '+(c.name||'this customer')); window.location.href='sms:'+ph+'?&body='+encodeURIComponent(body);}
+ else {ch='email'; if(!c.email) return toast('No email on file for '+(c.name||'this customer')); window.location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Photos for your '+j.svc+' job')+'&body='+encodeURIComponent(body);}
+ await sb.from('gl_messages').insert({job_id:j.id,customer_id:j.customer_id,sender_id:(S.me&&S.me.id)||null,channel:ch,body:body});
+ toast(kind==='sms'?'Text ready in your messaging app':'Email ready in your mail app');
+}
+function elSum(){return S.panel.lines.reduce(function(a,l){return a+num(l.qty)*num(l.unit_price);},0);}
+function editInvHtml(){
+ var P=S.panel, j=S.jobs.find(function(x){return x.id===P.id;}); if(!j) return '';
+ var dl='<datalist id="nvSvc">'+S.services.filter(function(x){return x.active!==false;}).map(function(x){return '<option value="'+esc(x.name)+'">'+esc(money(x.unit_price))+'</option>';}).join('')+'</datalist>';
+ var rows=P.lines.map(function(l,i){return '<tr><td><input data-el="'+i+'" data-f="description" list="nvSvc" value="'+esc(l.description)+'"></td><td><input data-el="'+i+'" data-f="qty" type="number" min="0" step="0.25" value="'+num(l.qty)+'"></td><td><input data-el="'+i+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(l.unit_price)+'"></td><td class="nvt">'+money(num(l.qty)*num(l.unit_price))+'</td><td><button class="btn sm" data-act="ielrem" data-id="'+i+'" title="Remove line">&times;</button></td></tr>';}).join('');
+ return '<div class="invpanel"><h3>Edit invoice – '+esc(invNo(j))+' · '+esc(cust(j.customer_id).name||'')+'</h3>'+dl+'<div class="scroll"><table class="tbl nvl"><tr><th>Service</th><th>Qty</th><th>Price ($)</th><th>Total</th><th></th></tr>'+rows+'</table></div><div class="invmore"><button class="btn sm" data-act="ieladd">+ Add line</button><span>Total <b id="elTotal">'+money(elSum())+'</b></span></div><div class="invmore"><button class="btn primary" data-act="ielsave">Save invoice</button><button class="btn" data-act="ielcancel">Cancel</button></div></div>';
+}
+function readEl(){
+ var P=S.panel; if(!P||P.type!=='iedit') return;
+ P.lines.forEach(function(l,i){['description','qty','unit_price'].forEach(function(f){var x=$('[data-el="'+i+'"][data-f="'+f+'"]'); if(x) l[f]=(f==='description')?x.value:num(x.value);});});
+}
+async function saveInvEdit(){
+ readEl(); var P=S.panel, j=S.jobs.find(function(x){return x.id===P.id;}); if(!j) return;
+ var keep=P.lines.filter(function(l){return String(l.description).trim();});
+ if(!keep.length) return toast('An invoice needs at least one line');
+ var del=P.removed.slice(); P.lines.forEach(function(l){if(l.id&&!String(l.description).trim()) del.push(l.id);});
+ for(var d=0;d<del.length;d++){var rd=await sb.from('gl_invoice_items').delete().eq('id',del[d]); if(rd.error) return toast(rd.error.message);}
+ for(var k=0;k<keep.length;k++){var l=keep[k], row={description:String(l.description).trim(),qty:num(l.qty)||1,unit_price:num(l.unit_price)};
+  var r=l.id?await sb.from('gl_invoice_items').update(row).eq('id',l.id):await sb.from('gl_invoice_items').insert({job_id:j.id,description:row.description,qty:row.qty,unit_price:row.unit_price,added_by:(S.me&&S.me.id)||null});
+  if(r.error) return toast(r.error.message);}
+ S.panel=null; S.__force=true; await reload(); toast('Invoice saved');
+}
 function nvLine(){return {description:'',qty:1,unit_price:0};}
 function nvSum(){return S.panel.lines.reduce(function(a,l){return a+num(l.qty)*num(l.unit_price);},0);}
 function newInvHtml(){
@@ -920,7 +985,11 @@ if(ordB){
  var oredo=function(){ordB.innerHTML=ordPage();};
  ordB.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act;
-  if(a==='oprev'){S.opage=Math.max(0,S.opage-1);oredo();}
+  if(a==='ophoto'){S.ph={job_id:b.dataset.id,items:[],busy:true}; oredo(); phLoad(); ordB.scrollTop=0;}
+  else if(a==='phclose'){S.ph=null; oredo();}
+  else if(a==='phtext'){phSend('sms');}
+  else if(a==='phemail'){phSend('email');}
+  else if(a==='oprev'){S.opage=Math.max(0,S.opage-1);oredo();}
   else if(a==='onext'){S.opage++;oredo();}
   else if(a==='omore'){S.olim+=10;oredo();}
   else if(a==='oall'){S.olim=100000;oredo();}
@@ -932,7 +1001,7 @@ if(ordB){
   var pos=t.selectionStart; S.oq=t.value; S.olim=10;S.opage=0; oredo(); var n=$('#oq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}}
  });
  ordB.addEventListener('change',function(ev){
-  var t=ev.target; if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10;S.opage=0; oredo();}
+  var t=ev.target; if(t.id==='phFile'){phUpload(t.files).then(function(){}); return;} if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10;S.opage=0; oredo();}
  });
 }
 var catB=$('#catBody');
@@ -972,6 +1041,30 @@ if(catB){
   }
  });
 }
+document.addEventListener('click',function(ev){
+ var b=ev.target.closest&&ev.target.closest('[data-act="iedit"]'); if(!b||!b.closest('#invBody,#invDash')) return;
+ var j=S.jobs.find(function(x){return x.id===b.dataset.id;}); if(!j) return;
+ S.draft=null; S.panel={type:'iedit',id:j.id,lines:itemsOf(j.id).map(function(i){return {id:i.id,description:i.description,qty:num(i.qty),unit_price:num(i.unit_price)};}),removed:[]};
+ var dlg=$('#invDlg'); if(dlg&&!dlg.open) dlg.showModal(); S.__force=true; render(); if(dlg) dlg.scrollTop=0; var bb=$('#invBody'); if(bb) bb.scrollTop=0;
+});
+(function(){var ib=$('#invBody'); if(!ib) return;
+ ib.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-act]'); if(!b) return; var a=b.dataset.act;
+  if(a==='ielcancel'){S.panel=null;S.__force=true;render();}
+  else if(a==='ieladd'){readEl();S.panel.lines.push({id:null,description:'',qty:1,unit_price:0});S.__force=true;render();}
+  else if(a==='ielrem'){readEl();var rm=S.panel.lines.splice(+b.dataset.id,1)[0]; if(rm&&rm.id) S.panel.removed.push(rm.id); if(!S.panel.lines.length) S.panel.lines.push({id:null,description:'',qty:1,unit_price:0}); S.__force=true;render();}
+  else if(a==='ielsave'){saveInvEdit();}
+ });
+ ib.addEventListener('input',function(ev){
+  var t=ev.target; if(t.dataset.el===undefined||!S.panel||S.panel.type!=='iedit') return;
+  readEl(); var i=+t.dataset.el, l=S.panel.lines[i];
+  if(t.dataset.f==='description'){var m=S.services.find(function(x){return x.name===t.value;}); if(m&&!num(l.unit_price)){l.unit_price=num(m.unit_price); var p=$('[data-el="'+i+'"][data-f="unit_price"]'); if(p) p.value=l.unit_price;}}
+  var row=t.closest('tr'); if(row){var c=row.querySelector('.nvt'); if(c) c.textContent=money(num(l.qty)*num(l.unit_price));}
+  var tt=$('#elTotal'); if(tt) tt.textContent=money(elSum());
+ });
+})();
+var calBtn=document.querySelector('[data-atab="cal"]');
+if(calBtn) calBtn.addEventListener('click',function(){ if(!document.body.classList.contains('is-admin')){var t=document.querySelector('[data-tab="cal"]'); if(t) t.click();} });
 d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
 ['est','ord','cat'].forEach(function(k){var b2=$('#'+k+'Btn'); if(b2) b2.addEventListener('click',function(){S.draft=null;S.panel=null;$('#'+k+'Dlg').showModal();render();reload().catch(function(){});});});
 var dvEl=$('#dashView'); if(dvEl) new MutationObserver(onDashMut).observe(dvEl,{childList:true}); setTimeout(onDashMut,1500);
