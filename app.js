@@ -85,7 +85,7 @@ async function boot(session) {
   document.body.classList.toggle("is-admin", isAdmin);
   $("#loginView").hidden = true; $("#noAccess").hidden = true; $("#appView").hidden = false;
   $("#appTitle").textContent = isAdmin ? "Tech Dispatch Calendar" : "My Schedule";
-  $("#whoami").textContent = `${C.business} · ${me.name} (${isAdmin ? "Admin" : "Technician"})`; $("#whoami2").textContent = me.name + " · Admin";
+  $("#whoami").textContent = `${C.business} · ${me.name} (${isAdmin ? "Admin" : "Technician"})`; $("#whoami2").textContent = me.name + (isAdmin ? " · Admin" : " · Technician");
   await loadAll(); subscribe(); startPresence();
 }
 
