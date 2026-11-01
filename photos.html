@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your job photos</title>
+<style>
+:root{--bg:#f4f7f4;--fg:#1b2420;--mut:#6b7770;--card:#fff;--line:#dde5dd;--acc:#2e7d32}
+@media(prefers-color-scheme:dark){:root{--bg:#121714;--fg:#e8efe9;--mut:#9aa8a0;--card:#1a211d;--line:#2a342d;--acc:#5fbf6b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:22px;margin:0 0 4px}.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+.btn{display:inline-block;background:var(--acc);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:600;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:12px}
+.grid a{text-decoration:none;color:inherit}.grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;display:block}
+.tag{font-size:12px;color:var(--mut);margin-top:3px}.err{color:#c62828}.ok{color:var(--acc)}
+</style></head><body><div class="wrap">
+<h1>Greenlight Lawn Care</h1><div id="sub" class="mut">Loading…</div>
+<div class="card"><b>Send us photos</b><p class="mut" style="margin:6px 0 12px">Add pictures of the area (up to 10 MB each).</p>
+<label class="btn">Choose photos<input id="f" type="file" accept="image/*" multiple hidden></label><div id="msg" class="mut" style="margin-top:10px"></div></div>
+<div class="card"><b>Photos</b><div id="grid" class="grid"></div><div id="none" class="mut" hidden>No photos yet.</div></div>
+</div>
+<script>
+var API='https://rzamarkbcrezmkvozcta.supabase.co/functions/v1/customer-photos';
+var T=new URLSearchParams(location.search).get('t')||'';
+var $=function(i){return document.getElementById(i);};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+async function load(){
+ try{
+  var r=await fetch(API+'?t='+encodeURIComponent(T)); var j=await r.json();
+  if(!j.ok){ $('sub').innerHTML='<span class="err">'+esc(j.error||'This link is not valid.')+'</span>'; $('f').disabled=true; return; }
+  $('sub').textContent=(j.name?'Hi '+j.name+' – ':'')+(j.service?j.service+' job':'your job')+(j.date?' · '+j.date:'');
+  $('grid').innerHTML=(j.photos||[]).map(function(p){return '<a href="'+esc(p.url)+'" target="_blank" rel="noopener"><img src="'+esc(p.url)+'" alt="photo" loading="lazy"><div class="tag">'+(p.from==='team'?'From us':'From you')+'</div></a>';}).join('');
+  $('none').hidden=(j.photos||[]).length>0;
+ }catch(e){ $('sub').innerHTML='<span class="err">Could not load. Please try again.</span>'; }
+}
+$('f').addEventListener('change',async function(){
+ var files=[].slice.call(this.files), ok=0, bad='';
+ for(var i=0;i<files.length;i++){
+  $('msg').textContent='Uploading '+(i+1)+' of '+files.length+'…';
+  var fd=new FormData(); fd.append('t',T); fd.append('file',files[i]);
+  try{ var r=await fetch(API,{method:'POST',body:fd}); var j=await r.json(); if(j.ok) ok++; else bad=j.error||'Upload failed'; }catch(e){ bad='Upload failed'; }
+ }
+ this.value='';
+ $('msg').innerHTML=(ok?'<span class="ok">'+ok+' photo'+(ok>1?'s':'')+' sent. Thank you!</span> ':'')+(bad?'<span class="err">'+esc(bad)+'</span>':'');
+ load();
+});
+if(!/^[a-f0-9]{64}$/.test(T)){ $('sub').innerHTML='<span class="err">This link is not valid.</span>'; $('f').disabled=true; } else load();
+<\/script></body></html>
