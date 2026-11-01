@@ -100,3 +100,37 @@ body.tech .admin-only{display:none!important}
   #printArea h1{font-size:18px}#printArea h2{font-size:14px;margin:12px 0 4px}
   @page{size:landscape;margin:12mm}
 }
+/* ---- portal additions ---- */
+.login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px;width:min(400px,100%);display:grid;gap:12px}
+.card label input{background:var(--bg)}
+.row2{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.err{color:var(--bad);margin:0;font-size:13px}
+body:not(.is-admin) .admin-only{display:none!important}
+body.is-admin .tech-only{display:none!important}
+.joblist{display:grid;gap:10px}
+.jcard{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:12px 14px;display:grid;gap:6px;cursor:pointer}
+.jcard .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.jcard .when{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.jcard .addr{color:var(--muted);font-size:13px}
+.daylbl{font-family:var(--display);font-weight:700;margin-top:6px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid currentColor}
+.tag.Pending{color:var(--warn)}.tag.Accepted{color:var(--ok)}.tag.Declined{color:var(--bad)}
+.det-h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:start}
+.kv{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px}
+.inv{width:100%;border-collapse:collapse;font-size:13px}
+.inv th,.inv td{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+.inv td.n,.inv th.n{text-align:right;font-family:var(--mono)}
+.inv tfoot td{font-weight:600}
+.additem{display:grid;grid-template-columns:2fr 70px 100px auto;gap:6px}
+.additem input,.additem select,.msgbox textarea,.paygrid input,.paygrid select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;font:inherit;color:var(--fg)}
+.msgbox{display:grid;gap:6px}
+.msgbox textarea{min-height:70px;resize:vertical}
+.msglog{display:grid;gap:4px;font-size:12px;max-height:160px;overflow:auto}
+.msglog div{border-left:2px solid var(--line);padding-left:8px;color:var(--muted)}
+.paygrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.copyable{font-family:var(--mono);user-select:all}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;z-index:50;font-size:13px}
+@media (max-width:600px){.additem{grid-template-columns:1fr 60px 80px}.additem button{grid-column:1/-1}.paygrid{grid-template-columns:1fr 1fr}}
