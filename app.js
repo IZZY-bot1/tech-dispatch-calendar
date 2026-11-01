@@ -310,24 +310,18 @@ function renderTechDash() {
     ${kpi("Next 7 days", upcoming.length, "scheduled jobs")}
     ${kpi("Unpaid", money(due), `${unpaid.length} completed jobs`, due > 0 ? "bad" : "")}
   </div>
-  <style>.tdgrid{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px;align-items:start}.tdgrid>div{display:flex;flex-direction:column;gap:14px;min-width:0}@media(max-width:800px){.tdgrid{grid-template-columns:1fr}}</style>
-  <div class="tdgrid">
-    <div class="tdleft">
-      <div class="panel"><h3>Quick links</h3><div class="alist">
-        <button data-go="cal"><span>▤ Calendar – my schedule</span><span class="when">Open</span></button>
-        <button data-go="est"><span>✎ Estimates</span><span class="when">Open</span></button>
-        <button data-go="ord"><span>⚒ Job orders</span><span class="when">Open</span></button>
-        <button data-go="inv"><span>▭ Invoices</span><span class="when">Open</span></button>
-        <button data-go="cmm"><span>✉ Messages${unread ? " (" + unread + " unread)" : ""}</span><span class="when">Open</span></button>
-      </div></div>
-      <div class="panel"><h3>Needs attention <small>${pending.length + unpaid.length} items</small></h3><div class="alist">${[...pending.slice(0, 8).map(j => row(j, "<b style='color:var(--warn)'>Please accept</b> " + longDate(j.date))), ...unpaid.slice(0, 8).map(j => row(j, "<b style='color:var(--bad)'>Unpaid " + money(balance(j)) + "</b>"))].join("") || '<p class="note">All clear. Nothing needs attention.</p>'}</div></div>
-      <div class="panel"><h3>Next 7 days</h3><div class="alist">${upcoming.slice(0, 10).map(j => row(j, longDate(j.date) + " " + t12(j.start_time))).join("") || '<p class="note">No upcoming jobs this week.</p>'}</div></div>
-    </div>
-    <div class="tdright">
-      <div class="panel"><h3>Today's schedule <small>${longDate(today)}</small></h3><div class="alist">${tj.map(j => row(j, t12(j.start_time))).join("") || '<p class="note">No jobs scheduled for today.</p>'}</div></div>
-    </div>
-  </div>`;
+  <div class="teamgrid">
+    <div class="panel" id="tdToday"><h3>Today's schedule <small>${longDate(today)}</small></h3><div class="alist">${tj.map(j => row(j, t12(j.start_time))).join("") || '<p class="note">No jobs scheduled for today.</p>'}</div></div>
+    <div class="panel" id="tdNext"><h3>Next 7 days <small>${upcoming.length} jobs</small></h3><div class="alist">${upcoming.slice(0, 10).map(j => row(j, longDate(j.date) + " " + t12(j.start_time))).join("") || '<p class="note">No upcoming jobs this week.</p>'}</div></div>
+  </div>
+  <div class="panel" id="tdAttn"><h3>Needs attention <small>${pending.length + unpaid.length} items</small></h3><div class="alist">${[...pending.slice(0, 8).map(j => row(j, "<b style='color:var(--warn)'>Please accept</b> " + longDate(j.date))), ...unpaid.slice(0, 8).map(j => row(j, "<b style='color:var(--bad)'>Unpaid " + money(balance(j)) + "</b>"))].join("") || '<p class="note">All clear. Nothing needs attention.</p>'}</div></div>`;
   const dv = $("#dashView"); dv.innerHTML = h;
+  if (!document.querySelector("#navAttn")) {
+    const dashBtn = document.querySelector('[data-atab="dash"]');
+    const mk = (id, label, target) => { const b = document.createElement("button"); b.className = "navb"; b.id = id; b.textContent = label; b.onclick = () => { techTab = "dash"; render(); const el = document.querySelector(target); if (el) el.scrollIntoView({behavior: "smooth", block: "start"}); }; return b; };
+    const b2 = mk("navNext", "▸ Next 7 days", "#tdNext"), b1 = mk("navAttn", "! Needs attention", "#tdAttn");
+    dashBtn.after(b1); b1.after(b2);
+  }
   if (!window.__catObs) { window.__catObs = new MutationObserver(() => { dv.querySelectorAll(".invcard").forEach(s => { const t = s.querySelector("h3"); if (t && /^Service Catalog/.test(t.textContent)) s.remove(); }); }); window.__catObs.observe(dv, {childList: true}); }
   $("#summary").hidden = true;
 }
