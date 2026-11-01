@@ -188,7 +188,7 @@ body:not(.is-admin) .side{display:flex}.phgrid{display:grid;grid-template-column
 <aside class="side admin-only" aria-label="Main menu">
   <div class="brand">Greenlight<small>Dispatch</small></div>
   <nav class="nav">
-    <button class="navb admin-only" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
+    <button class="navb" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
     <button class="navb" data-atab="cal" aria-pressed="false">▤ Calendar</button>
     <button class="navb" id="estBtn">✎ Estimates</button>
     <button class="navb" id="ordBtn">⚒ Job orders</button>
@@ -211,9 +211,9 @@ body:not(.is-admin) .side{display:flex}.phgrid{display:grid;grid-template-column
     </div>
   </header>
 
-  <div id="dashView" class="dash admin-only"></div>
+  <div id="dashView" class="dash"></div>
 
-  <div class="bar tech-only" id="techTabs">
+  <div class="bar tech-only" id="techTabs" style="display:none">
     <div class="seg" role="group" aria-label="Section">
       <button data-tab="list" aria-pressed="true">My jobs</button><button data-tab="cal" aria-pressed="false">Schedule</button><button data-tab="msg" aria-pressed="false">Messages <span class="badge" id="techUnread" hidden></span></button>
     </div>
