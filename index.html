@@ -157,6 +157,7 @@
 #invDash .ipill.Declined,#invDash .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
 @media (max-width:700px){#invDlg .row{grid-template-columns:1fr}}
 .invfilt{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}.invfilt input[type=search]{flex:1 1 220px;min-width:180px}.invfilt select,.invfilt input[type=date]{width:auto;flex:0 1 auto}.invfilt .dl{display:flex;align-items:center;gap:6px;font-size:13px}.invmore{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.nvl td:nth-child(2),.nvl td:nth-child(3){width:96px}.nvl .nvt{white-space:nowrap}
+.btn.danger{color:#ff9b8f;border-color:rgba(255,155,143,.45)}#catDlg tr.editing td{background:rgba(255,255,255,.04)}#catDlg td input,#catDlg td select{width:100%}
 </style>
 </head>
 <body>
@@ -402,7 +403,7 @@ function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catc
 var sb=supabase.createClient(C.url,C.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'gl-inv'},global:{fetch:function(u,o){var s=stored(),h=new Headers((o&&o.headers)||{}); if(s&&s.access_token) h.set('Authorization','Bearer '+s.access_token); return fetch(u,Object.assign({},o,{headers:h}));}}});
 var $=function(s,r){return (r||document).querySelector(s);};
 var d=$('#invDlg'); if(!d||d.__inv) return; d.__inv=1;
-var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:'',ifq:'',ist:'',ipay:'',itech:'',idate:'',idto:'',ilim:10,oq:'',ost:'',osvc:'',ocust:'',odate:'',odto:'',olim:10};
+var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:'',ifq:'',ist:'',ipay:'',itech:'',idate:'',idto:'',ilim:10,oq:'',ost:'',osvc:'',ocust:'',odate:'',odto:'',olim:10,cat:{mode:"",id:"",vals:{}}};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var num=function(n){return +n||0;};
 var money=function(n){return '$'+num(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
@@ -658,13 +659,20 @@ function catCard(){
  var it=catItems(), rows=it.slice(0,6).map(function(i){return '<tr><td>'+esc(i.name)+'</td><td>'+esc(i.unit)+'</td><td>'+(num(i.price)?money(i.price):'Quote')+'</td></tr>';}).join('');
  return '<section class="invcard"><div class="invhead"><h3>Service Catalog</h3><span class="iacts"><span class="note">'+it.length+' services</span><button class="btn" data-act="openpage" data-id="cat">View all</button>'+(isAdm()?'<button class="btn primary" data-act="openpage" data-id="cat">+ Add service</button>':'')+'</span></div><div class="scroll"><table class="tbl"><tr><th>Service</th><th>Unit</th><th>Price</th></tr>'+rows+'</table></div></section>';
 }
+function catCells(v){
+ return '<td><input data-cf="name" placeholder="Service name" value="'+esc(v.name||'')+'"></td><td><input data-cf="category" list="invCats" placeholder="Category" value="'+esc(v.category||'')+'"></td><td><select data-cf="job_type">'+JOBTYPES.map(function(t){return '<option'+(t===(v.job_type||'Other')?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select></td><td><input data-cf="unit" placeholder="visit" size="9" value="'+esc(v.unit||'')+'"></td><td><input data-cf="unit_price" type="number" min="0" step="0.01" placeholder="0.00" style="width:90px" value="'+(v.unit_price===''||v.unit_price==null?'':num(v.unit_price))+'"></td>';
+}
 function catalogHtml(){
- var cats=uniq(S.services.map(function(s){return s.category;}));
- var rows=S.services.map(function(s){return '<tr class="'+(s.active?'':'inactive')+'"><td><input data-cat="'+s.id+'" data-f="name" value="'+esc(s.name)+'"></td><td><input data-cat="'+s.id+'" data-f="category" value="'+esc(s.category)+'" list="invCats"></td><td><select data-cat="'+s.id+'" data-f="job_type">'+JOBTYPES.map(function(t){return '<option'+(t===s.job_type?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select></td><td><input data-cat="'+s.id+'" data-f="unit" value="'+esc(s.unit)+'" size="9"></td><td><input data-cat="'+s.id+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(s.unit_price)+'" style="width:90px"></td><td><button class="btn sm" data-act="cact" data-id="'+s.id+'">'+(s.active?'Hide':'Show')+'</button></td></tr>';}).join('');
- return '<div class="invcat"><div class="invhead"><h3>Service catalog</h3><span class="note">Lawn care services you can add to any estimate. Prices are editable starting points based on typical San Antonio rates.</span></div>'
- +(S.setup?'':'<p class="note">Showing the starter list. Editing prices and adding your own services turns on after the one-time setup above.</p>')+(S.services.length?'':starterTable())
- +(S.setup&&!S.services.length?'<p><button class="btn primary" data-act="cseed">Load starter lawn services</button></p>':'')
- +(S.setup?'<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Category</th><th>Job type</th><th>Unit</th><th>Price</th><th></th></tr>'+rows+'<tr><td><input id="nsName" placeholder="New service name"></td><td><input id="nsCat" placeholder="Category" list="invCats"></td><td><select id="nsType">'+JOBTYPES.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select></td><td><input id="nsUnit" placeholder="visit" size="9"></td><td><input id="nsPrice" type="number" min="0" step="0.01" placeholder="0.00" style="width:90px"></td><td><button class="btn sm primary" data-act="cadd">Add</button></td></tr></table></div><datalist id="invCats">'+cats.map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>':'')+'</div>';
+ var C=S.cat, cats=uniq(S.services.map(function(s){return s.category;}));
+ var formRow=function(label){return '<tr class="editing">'+catCells(C.vals||{})+'<td class="iacts"><button class="btn sm primary" data-act="csave">'+label+'</button><button class="btn sm" data-act="ccancel">Cancel</button></td></tr>';};
+ var rows=S.services.map(function(s){
+  if(C.mode==='edit'&&C.id===s.id) return formRow('Save');
+  return '<tr><td>'+esc(s.name)+'</td><td>'+esc(s.category)+'</td><td>'+esc(s.job_type)+'</td><td>'+esc(s.unit)+'</td><td>'+money(s.unit_price)+'</td><td class="iacts"><button class="btn sm" data-act="cedit" data-id="'+s.id+'">Edit</button><button class="btn sm danger" data-act="cdel" data-id="'+s.id+'">Delete</button></td></tr>';}).join('');
+ var empty=(!rows&&C.mode!=='new')?'<tr><td colspan="6" class="note">No services yet. Click + Add service to create your first one.</td></tr>':'';
+ return '<div class="invcat"><div class="invhead"><h3>Service catalog</h3><span class="iacts"><button class="btn primary" data-act="cnew">+ Add service</button><button class="btn" data-act="cstarter" title="Adds the typical lawn services that are not in your list yet">Load starter lawn services</button></span></div>'
+ +'<p class="note">Your price list. Add, edit or delete services here and they show up on every estimate and invoice. Use Load starter lawn services only for special jobs; it adds typical services that are not in your list yet. Deleting a service does not change estimates or invoices already made.</p>'
+ +'<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Category</th><th>Job type</th><th>Unit</th><th>Price</th><th></th></tr>'+(C.mode==='new'?formRow('Add'):'')+rows+empty+'</table></div>'
+ +'<datalist id="invCats">'+cats.map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist></div>';
 }
 function panelHtml(){
  var P=S.panel;
@@ -895,6 +903,43 @@ if(ordB){
  });
  ordB.addEventListener('change',function(ev){
   var t=ev.target; if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10; oredo();}
+ });
+}
+var catB=$('#catBody');
+if(catB){
+ var cre=function(){catB.innerHTML=catPage();};
+ var clr=function(){S.cat={mode:'',id:'',vals:{}};};
+ catB.addEventListener('input',function(ev){var t=ev.target; if(t.dataset.cf&&S.cat.vals) S.cat.vals[t.dataset.cf]=t.value;});
+ catB.addEventListener('click',async function(ev){
+  var b=ev.target.closest('[data-act]'); if(!b) return; var a=b.dataset.act, id=b.dataset.id;
+  if(['cnew','cedit','ccancel','csave','cdel','cstarter'].indexOf(a)<0) return;
+  if(!isAdm()) return toast('Only an admin can change the service catalog.');
+  if(a==='cnew'){S.cat={mode:'new',id:'',vals:{name:'',category:'',job_type:'Other',unit:'visit',unit_price:''}};cre();}
+  else if(a==='cedit'){var sv=S.services.find(function(x){return x.id===id;}); if(!sv) return; S.cat={mode:'edit',id:id,vals:{name:sv.name,category:sv.category,job_type:sv.job_type,unit:sv.unit,unit_price:sv.unit_price}};cre();}
+  else if(a==='ccancel'){clr();cre();}
+  else if(a==='csave'){
+   var v=S.cat.vals||{}; catB.querySelectorAll('[data-cf]').forEach(function(x){v[x.dataset.cf]=x.value;});
+   var nm=String(v.name||'').trim(); if(!nm) return toast('Enter a service name');
+   if(S.services.some(function(x){return x.name.toLowerCase()===nm.toLowerCase()&&x.id!==S.cat.id;})) return toast('That service is already in the catalog');
+   var row={name:nm,category:String(v.category||'').trim()||'Other',job_type:v.job_type||'Other',unit:String(v.unit||'').trim()||'visit',unit_price:num(v.unit_price)};
+   var wasEdit=S.cat.mode==='edit';
+   var r=wasEdit?await sb.from('gl_services').update(row).eq('id',S.cat.id):await sb.from('gl_services').insert(row);
+   if(r.error) return toast(r.error.message);
+   toast(wasEdit?'Service updated':'Service added'); clr(); await reload();
+  }
+  else if(a==='cdel'){
+   var d1=S.services.find(function(x){return x.id===id;}); if(!d1) return;
+   if(!confirm('Delete "'+d1.name+'" from the service catalog? Estimates and invoices already made keep their lines.')) return;
+   var r2=await sb.from('gl_services').delete().eq('id',id); if(r2.error) return toast(r2.error.message);
+   toast('Service deleted'); await reload();
+  }
+  else if(a==='cstarter'){
+   var have={}; S.services.forEach(function(x){have[x.name.toLowerCase()]=1;});
+   var add=STARTER.filter(function(x){return !have[x[0].toLowerCase()];}).map(function(x){return {name:x[0],category:x[1],job_type:x[2],unit:x[3],unit_price:num(x[4])};});
+   if(!add.length) return toast('All starter services are already in your catalog');
+   var r3=await sb.from('gl_services').insert(add); if(r3.error) return toast(r3.error.message);
+   toast(add.length+' starter services added'); await reload();
+  }
  });
 }
 d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
