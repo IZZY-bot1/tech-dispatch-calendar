@@ -29,7 +29,7 @@ let me = null, isAdmin = false;
 let staff = [], customers = [], jobs = [], items = [];
 let adminTab = "dash", view = "month", cur = new Date(), focusTech = "all", payF = "all", custQ = "", techTab = "list";
 const hidden = new Set();
-try { const p = JSON.parse(localStorage.getItem("gl-portal-prefs")) || {}; view = p.view || view; payF = p.pay || payF; techTab = p.tab || techTab; } catch(e) {}
+try { const p = JSON.parse(localStorage.getItem("gl-portal-prefs")) || {}; view = p.view || view; payF = p.pay || payF; techTab = "dash"; } catch(e) {}
 const savePrefs = () => { try { localStorage.setItem("gl-portal-prefs", JSON.stringify({view, pay:payF, tab:techTab})); } catch(e) {} };
 
 const tech = id => staff.find(t => t.id === id) || {name:"Unassigned", color:"#888"};
@@ -131,7 +131,7 @@ function chips() {
 $("#chips").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; const id = b.dataset.t;
   if (focusTech !== "all") { focusTech = id; $("#techSel").value = id; } else hidden.has(id) ? hidden.delete(id) : hidden.add(id); render(); };
 document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { techTab = b.dataset.tab; render(); });
-document.querySelectorAll("[data-atab]").forEach(b => b.onclick = () => { adminTab = b.dataset.atab; render(); });
+document.querySelectorAll("[data-atab]").forEach(b => b.onclick = () => { adminTab = b.dataset.atab; if (!isAdmin && adminTab === "dash") techTab = "dash"; render(); });
 
 function visibleJobs() {
   const q = custQ.trim().toLowerCase();
@@ -161,8 +161,8 @@ function render() {
   const showMsg = !isAdmin && techTab === "msg";
   $("#techMsgView").hidden = !showMsg;
   if (showMsg) { $("#listView").hidden = true; $("#calWrap").hidden = true; $("#summary").hidden = true; renderTechChat(); return; }
-  const showList = !isAdmin && techTab === "list", showDash = isAdmin && adminTab === "dash";
-  document.querySelectorAll("[data-atab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.atab === adminTab));
+  const showList = !isAdmin && techTab === "list", showDash = isAdmin ? adminTab === "dash" : techTab === "dash";
+  document.querySelectorAll("[data-atab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.atab === (isAdmin ? adminTab : (techTab === "dash" ? "dash" : techTab === "cal" ? "cal" : ""))));
   $("#listView").hidden = !showList; $("#dashView").hidden = !showDash; $("#calWrap").hidden = showList || showDash;
   $("#summary").hidden = false;
   if (showDash) return renderDash();
@@ -249,6 +249,7 @@ const ago = t => { if (!t) return "never"; const m = Math.round((Date.now() - ne
   return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m/60)} hr ago` : new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"}); };
 const initials = n => n.replace(/\(.*?\)/g,"").trim().split(/\s+/).map(w => w[0]).join("").slice(0,2).toUpperCase();
 function renderDash() {
+  if (!isAdmin) return renderTechDash();
   const today = iso(new Date());
   const live = jobs.filter(j => j.status !== "Canceled");
   const tj = live.filter(j => j.date === today), T = totals(tj);
@@ -289,6 +290,42 @@ function renderDash() {
   $("#summary").hidden = true;
   drawMap(team);
 }
+function renderTechDash() {
+  const today = iso(new Date());
+  const t12 = s => { if (!s) return ""; const [H, M] = String(s).split(":"); const h = +H; return (h % 12 || 12) + ":" + (M || "00") + (h < 12 ? " AM" : " PM"); };
+  const byTime = (x, y) => (x.date + (x.start_time || "")).localeCompare(y.date + (y.start_time || ""));
+  const mine = jobs.filter(j => j.tech_id === me.id && j.status !== "Canceled");
+  const tj = mine.filter(j => j.date === today).sort(byTime), T = totals(tj);
+  const wk = iso(new Date(Date.now() + 7 * 864e5));
+  const pending = mine.filter(j => j.accept_status === "Pending" && j.date >= today).sort(byTime);
+  const upcoming = mine.filter(j => j.date > today && j.date <= wk && j.status !== "Completed").sort(byTime);
+  const unpaid = mine.filter(j => j.date <= today && j.status === "Completed" && balance(j) > 0);
+  const due = unpaid.reduce((s, j) => s + balance(j), 0);
+  const unread = chats.filter(c => c.to_staff === me.id && !c.read_at).length;
+  const kpi = (l, v, d, cls = "") => `<div class="kpi ${cls}"><span class="l">${l}</span><span class="v">${v}</span>${d ? `<span class="d">${d}</span>` : ""}</div>`;
+  const row = (j, label) => { const c = cust(j.customer_id); return `<button data-open="${j.id}"><span class="dot" style="--c:${esc(me.color)}"></span><span>${label} · ${esc(c.name)} – ${esc(j.svc)}${c.address ? " · " + esc(c.address) : ""}</span><span class="when">${esc(j.status)}</span></button>`; };
+  const h = `<div class="kpis">
+    ${kpi("Jobs today", T.n, `${T.done} done · ${tj.filter(j => j.status === "In progress").length} in progress`)}
+    ${kpi("Awaiting my acceptance", pending.length, "upcoming jobs", pending.length ? "warn" : "")}
+    ${kpi("Next 7 days", upcoming.length, "scheduled jobs")}
+    ${kpi("Unpaid", money(due), `${unpaid.length} completed jobs`, due > 0 ? "bad" : "")}
+  </div>
+  <div class="teamgrid">
+    <div class="panel"><h3>Today's schedule <small>${longDate(today)}</small></h3><div class="alist">${tj.map(j => row(j, t12(j.start_time))).join("") || '<p class="note">No jobs scheduled for today.</p>'}</div></div>
+    <div class="panel"><h3>Quick links</h3><div class="alist">
+      <button data-go="cal"><span>▤ Calendar – my schedule</span><span class="when">Open</span></button>
+      <button data-go="est"><span>✎ Estimates</span><span class="when">Open</span></button>
+      <button data-go="ord"><span>⚒ Job orders</span><span class="when">Open</span></button>
+      <button data-go="inv"><span>▭ Invoices</span><span class="when">Open</span></button>
+      <button data-go="cmm"><span>✉ Messages${unread ? " (" + unread + " unread)" : ""}</span><span class="when">Open</span></button>
+    </div></div>
+  </div>
+  <div class="panel"><h3>Needs attention <small>${pending.length + unpaid.length} items</small></h3><div class="alist">${[...pending.slice(0, 8).map(j => row(j, "<b style='color:var(--warn)'>Please accept</b> " + longDate(j.date))), ...unpaid.slice(0, 8).map(j => row(j, "<b style='color:var(--bad)'>Unpaid " + money(balance(j)) + "</b>"))].join("") || '<p class="note">All clear. Nothing needs attention.</p>'}</div></div>
+  <div class="panel"><h3>Next 7 days</h3><div class="alist">${upcoming.slice(0, 10).map(j => row(j, longDate(j.date) + " " + t12(j.start_time))).join("") || '<p class="note">No upcoming jobs this week.</p>'}</div></div>`;
+  const dv = $("#dashView"); dv.innerHTML = h;
+  if (!window.__catObs) { window.__catObs = new MutationObserver(() => { dv.querySelectorAll(".invcard").forEach(s => { const t = s.querySelector("h3"); if (t && /^Service Catalog/.test(t.textContent)) s.remove(); }); }); window.__catObs.observe(dv, {childList: true}); }
+  $("#summary").hidden = true;
+}
 function alertRow(j, label) { const c = cust(j.customer_id);
   return `<button data-open="${j.id}"><span class="dot" style="--c:${esc(tech(j.tech_id).color)}"></span><span>${label} · ${esc(c.name)} – ${esc(j.svc)}</span><span class="when">${longDate(j.date)}</span></button>`; }
 let map = null, markers = {};
@@ -305,6 +342,8 @@ function drawMap(team) {
   if (pts.length === 1) map.setView(pts[0], 13); else if (pts.length > 1) map.fitBounds(pts, {padding:[30,30]});
 }
 $("#dashView").onclick = e => {
+  const g = e.target.closest("[data-go]");
+  if (g) { const m = {cal:'[data-atab="cal"]', est:"#estBtn", ord:"#ordBtn", inv:"#invBtn", cmm:"#cmmBtn"}; const el = document.querySelector(m[g.dataset.go]); if (el) el.click(); return; }
   const b = e.target.closest("[data-open]"); if (b) return openDetail(b.dataset.open);
   const c = e.target.closest("[data-chat]"); if (c) return openChat(c.dataset.chat);
   const l = e.target.closest("[data-locate]"); if (l && markers[l.dataset.locate]) { map.setView(markers[l.dataset.locate].getLatLng(), 15); markers[l.dataset.locate].openPopup(); $("#map").scrollIntoView({behavior:"smooth", block:"center"}); }
