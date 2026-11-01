@@ -428,12 +428,12 @@ function renderDetail() {
         <label>&nbsp;<button class="btn" id="pSave" type="button">Save payment</button></label>
       </div>` : ""}
       <div class="btnrow">
-        <button class="btn primary" data-inv="sms" ${c.phone && its.length?"":"disabled"}>Text invoice</button>
-        <button class="btn" data-inv="email" ${c.email && its.length?"":"disabled"}>Email invoice</button>
+        <button class="btn primary" data-inv="sms" ${c.phone && its.length && j.status==="Completed"?"":"disabled"}>Text invoice</button>
+        <button class="btn" data-inv="email" ${c.email && its.length && j.status==="Completed"?"":"disabled"}>Email invoice</button>
         <button class="btn" id="invCopy" ${its.length?"":"disabled"}>Copy invoice</button>
         <button class="btn" id="invPrint" ${its.length?"":"disabled"}>Print / PDF</button>
       </div>
-      <p class="note">${j.invoice_sent_at ? "Invoice last sent " + new Date(j.invoice_sent_at).toLocaleString() : "Invoice not sent yet."}</p>
+      <p class="note">${j.status!=="Completed" ? "Invoices can be sent once the job is marked Completed." : (j.invoice_sent_at ? "Invoice last sent " + new Date(j.invoice_sent_at).toLocaleString() : "Invoice not sent yet.")}</p>
     </fieldset>`;
   wireDetail(j, c);
 }
@@ -464,7 +464,7 @@ function wireDetail(j, c) {
     loadMessages(j.id);
   };
   body.querySelectorAll("[data-send]").forEach(b => b.onclick = () => send(b.dataset.send, $("#dMsg").value, false));
-  body.querySelectorAll("[data-inv]").forEach(b => b.onclick = () => send(b.dataset.inv, invoiceText(j), true));
+  body.querySelectorAll("[data-inv]").forEach(b => b.onclick = () => { if (j.status !== "Completed") return toast("Invoices can be sent once the job is Completed"); send(b.dataset.inv, invoiceText(j), true); });
   const cp = $("#invCopy"); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(invoiceText(j)); toast("Invoice copied"); } catch(e) { toast("Copy blocked – use Print instead"); } };
   const pr = $("#invPrint"); if (pr) pr.onclick = () => printInvoice(j);
   const sel = $("#iSvc"); if (sel) sel.onchange = () => $("#iCustom").hidden = sel.value !== "__custom";
