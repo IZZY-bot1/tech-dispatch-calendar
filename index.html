@@ -9,6 +9,50 @@
 <link rel="stylesheet" href="styles.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style id="techPage">
+/* Manage technicians, Download jobs and Invoices open inside the main window (sidebar stays) */
+#techDlg,#dlDlg,#invDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
+#techDlg>.f,#dlDlg>.f,#invDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
+#invDlg>.f{max-width:1240px;display:block}
+#dlDlg>.f{max-width:760px}
+#techDlg .scroll{max-height:none;overflow-x:auto}
+#techDlg .tform{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+#invDlg .det-h{margin-bottom:14px}
+#invDlg h3{margin:0;font:700 16px var(--display)}
+#invDlg .invtabs{margin-bottom:14px}
+#invDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+#invDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
+#invDlg .tbl td,#invDlg .tbl th{vertical-align:top}
+#invDlg input,#invDlg select,#invDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+#invDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
+#invDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#invDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
+#invDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
+#invDlg .invstats b{color:var(--fg);font-family:var(--mono)}
+#invDlg .invtotal{text-align:right;font-size:16px}
+#invDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
+#invDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+#invDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+#invDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#invDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
+#invDlg .ipill.Approved,#invDlg .ipill.Paid,#invDlg .ipill.Converted,#invDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
+#invDlg .ipill.Sent,#invDlg .ipill.Partial,#invDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
+#invDlg .ipill.Declined,#invDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
+#invDlg td:first-child select[data-f="service_id"],#invDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
+#invDash{grid-column:1/-1;display:grid;gap:14px}
+#invDash .invcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+#invDash h3{margin:0;font:700 16px var(--display)}
+#invDash .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px}
+#invDash .scroll{overflow-x:auto}
+#invDash .tbl td,#invDash .tbl th{vertical-align:top}
+#invDash select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+#invDash .iacts{display:flex;gap:6px;flex-wrap:wrap}
+#invDash .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
+#invDash .ipill.Approved,#invDash .ipill.Paid,#invDash .ipill.Converted,#invDash .ipill.Completed{color:var(--ok);border-color:var(--ok)}
+#invDash .ipill.Sent,#invDash .ipill.Partial,#invDash .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
+#invDash .ipill.Declined,#invDash .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
+@media (max-width:700px){#invDlg .row{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 
@@ -39,6 +83,7 @@
   <nav class="nav">
     <button class="navb" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
     <button class="navb" data-atab="cal" aria-pressed="false">▤ Calendar</button>
+    <button class="navb" id="invBtn">▭ Invoices</button>
     <button class="navb" id="techBtn">☻ Manage technicians</button>
     <button class="navb" id="dlBtn">⭳ Download jobs</button>
   </nav>
@@ -138,10 +183,15 @@
   <div class="f" id="detBody"></div>
 </dialog>
 
+<!-- ===== INVOICES ===== -->
+<dialog id="invDlg" class="wide">
+  <div class="f"><div class="det-h"><h2>Invoices</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="invBody"></div></div>
+</dialog>
+
 <!-- ===== TECHNICIANS ===== -->
 <dialog id="techDlg" class="wide">
   <div class="f">
-    <h2>Manage technicians</h2>
+    <div class="det-h"><h2>Manage technicians</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div>
     <p class="note">Add a technician with their email. They then open this portal, choose “Create your account” with that same email, and see only their own jobs.</p>
     <div class="scroll"><table class="tbl" id="techTbl"></table></div>
     <form id="techForm" class="tform">
@@ -151,7 +201,7 @@
       <label>Color<div class="swatches" id="tColors"></div></label>
       <div class="confirm" id="deactBox" hidden></div>
       <p class="err" id="techErr" hidden></p>
-      <div class="acts"><button type="button" class="btn" id="tReset">Clear</button><div class="grp"><button type="button" class="btn" data-close>Close</button><button type="submit" class="btn primary" id="tSave">Add technician</button></div></div>
+      <div class="acts"><button type="button" class="btn" id="tReset">Clear</button><div class="grp"><button type="button" class="btn" data-close>Back to dashboard</button><button type="submit" class="btn primary" id="tSave">Add technician</button></div></div>
     </form>
   </div>
 </dialog>
@@ -159,7 +209,7 @@
 <!-- ===== DOWNLOAD ===== -->
 <dialog id="dlDlg" class="wide">
   <form class="f" id="dlForm">
-    <h2>Download jobs</h2>
+    <div class="det-h"><h2>Download jobs</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div>
     <div class="row">
       <label>Period<select id="dPeriod"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="custom">Custom range</option></select></label>
       <label id="dDateL">Date<input id="dDate" type="date"></label>
@@ -185,5 +235,310 @@
 <div id="printArea"></div>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script>
+/* Manage technicians, Download jobs and Invoices as pages inside the main window; sidebar and dashboard stay untouched */
+(function(){
+  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"]], saved=[];
+  var nav=function(){return document.querySelectorAll(".nav .navb[data-atab]");};
+  var anyOpen=function(){return pairs.some(function(p){var d=document.getElementById(p[0]);return d&&d.open;});};
+  function place(d){var s=document.querySelector(".side"),r=s?s.getBoundingClientRect():{right:0,bottom:0,width:0},stacked=r.width>innerWidth*0.9;
+    d.style.left=(stacked?0:r.right)+"px"; d.style.top=(stacked?r.bottom:0)+"px";}
+  pairs.forEach(function(p){
+    var d=document.getElementById(p[0]); if(!d) return;
+    d.showModal=function(){
+      if(!anyOpen()) saved=[].map.call(nav(),function(b){return b.getAttribute("aria-pressed");});
+      place(d); d.show(); d.scrollTop=0;
+      nav().forEach(function(b){b.setAttribute("aria-pressed","false");});
+      pairs.forEach(function(q){var b=document.getElementById(q[1]); if(b) b.setAttribute("aria-pressed",q[1]===p[1]?"true":"false");});
+    };
+    d.addEventListener("close",function(){
+      var b=document.getElementById(p[1]); if(b) b.setAttribute("aria-pressed","false");
+      if(anyOpen()) return;
+      var n=nav(), any=[].some.call(n,function(x){return x.getAttribute("aria-pressed")==="true";});
+      if(!any) [].forEach.call(n,function(x,i){if(saved[i]) x.setAttribute("aria-pressed",saved[i]);});
+    });
+  });
+  document.addEventListener("click",function(e){
+    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,[data-signout]")) return;
+    pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) d.close();});
+  },true);
+  window.addEventListener("resize",function(){pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) place(d);});});
+})();
+</script>
+<script>
+/* Invoices page: estimates, job orders, invoices, payments, service catalog */
+(function invModule(){
+var C=window.GL_CONFIG, KEY='sb-'+new URL(C.url).host.split('.')[0]+'-auth-token';
+function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}}
+/* Reuse the portal's signed-in session without starting a second auth client */
+var sb=supabase.createClient(C.url,C.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'gl-inv'},global:{fetch:function(u,o){var s=stored(),h=new Headers((o&&o.headers)||{}); if(s&&s.access_token) h.set('Authorization','Bearer '+s.access_token); return fetch(u,Object.assign({},o,{headers:h}));}}});
+var $=function(s,r){return (r||document).querySelector(s);};
+var d=$('#invDlg'); if(!d||d.__inv) return; d.__inv=1;
+var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:''};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var num=function(n){return +n||0;};
+var money=function(n){return '$'+num(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
+var iso=function(){var t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');};
+var toast=function(m){var t=document.getElementById('toast'); if(!t) return; t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(function(){t.hidden=true;},3600);};
+var cust=function(id){return S.customers.find(function(c){return c.id===id;})||{};};
+var tech=function(id){return S.staff.find(function(s){return s.id===id;});};
+var itemsOf=function(jid){return S.items.filter(function(i){return i.job_id===jid;});};
+var jobTotal=function(j){return itemsOf(j.id).reduce(function(a,i){return a+num(i.qty)*num(i.unit_price);},0);};
+var eItems=function(eid){return S.eitems.filter(function(i){return i.estimate_id===eid;});};
+var eTotal=function(eid){return eItems(eid).reduce(function(a,i){return a+num(i.qty)*num(i.unit_price);},0);};
+var estNo=function(e){return 'EST-'+(e.num||String(e.id).slice(0,6).toUpperCase());};
+var invNo=function(j){return j.receipt||('INV-'+String(j.id).slice(0,6).toUpperCase());};
+var longDate=function(s){if(!s) return ''; var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});};
+var uniq=function(a){return a.filter(function(x,i){return a.indexOf(x)===i;});};
+var activeTechs=function(){return S.staff.filter(function(s){return s.active;});};
+var techOpts=function(sel){return '<option value="">Unassigned</option>'+activeTechs().map(function(t){return '<option value="'+t.id+'"'+(t.id===sel?' selected':'')+'>'+esc(t.name)+'</option>';}).join('');};
+var JOBTYPES=C.services||['Other'];
+var STARTER=[
+ ['Mowing – average lot','Mowing','Mow & edge','visit',50],['Mowing – large lot','Mowing','Mow & edge','visit',70],
+ ['Fertilization','Lawn treatment','Fertilize','application',100],['Core aeration','Lawn treatment','Aeration','visit',120],
+ ['Overseeding (winter ryegrass)','Lawn treatment','Other','lawn',250],['Weed control','Lawn treatment','Other','treatment',85],
+ ['Dethatching','Lawn treatment','Other','lawn',190],['Leaf removal','Cleanup','Leaf cleanup','project',200],
+ ['Yard cleanup','Cleanup','Leaf cleanup','project',250],['Hedge & shrub trimming','Trees & shrubs','Hedge trim','visit',90],
+ ['Bush trimming','Trees & shrubs','Hedge trim','bush',10],['Tree trimming','Trees & shrubs','Other','tree',350],
+ ['Mulch installation','Beds & mulch','Mulch install','cubic yard',100],['Sprinkler repair','Irrigation','Sprinkler repair','repair',150],
+ ['Pressure washing','Other','Pressure wash','job',0],['General labor','Other','Other','hour',55]];
+
+var effServices=function(){return S.services.length?S.services:STARTER.map(function(s,i){return {id:'starter-'+i,name:s[0],category:s[1],job_type:s[2],unit:s[3],unit_price:s[4],active:true};});};
+function starterTable(){var last='';return '<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Category</th><th>Unit</th><th>Typical price</th></tr>'+STARTER.map(function(s){return '<tr><td>'+esc(s[0])+'</td><td>'+esc(s[1])+'</td><td>'+esc(s[3])+'</td><td>'+(s[4]?money(s[4]):'Quote')+'</td></tr>';}).join('')+'</table></div>';}
+async function load(){
+ var s0=stored(), u=s0&&s0.user;
+ var r=await Promise.all([sb.from('gl_customers').select('*').order('name'),sb.from('gl_staff').select('*').order('name'),sb.from('gl_jobs').select('*').order('date',{ascending:false}),sb.from('gl_invoice_items').select('*').order('created_at'),sb.from('gl_services').select('*').order('category').order('name'),sb.from('gl_estimates').select('*').order('created_at',{ascending:false}),sb.from('gl_estimate_items').select('*').order('created_at')]);
+ S.customers=r[0].data||[]; S.staff=r[1].data||[]; S.jobs=r[2].data||[]; S.items=r[3].data||[];
+ S.setup=!(r[4].error||r[5].error||r[6].error);
+ S.services=r[4].data||[]; S.estimates=r[5].data||[]; S.eitems=r[6].data||[];
+ S.me=S.staff.find(function(s){return u&&s.user_id===u.id;})||null;
+}
+async function reload(){await load(); render();}
+
+/* ---------- document html ---------- */
+function docHtml(kind,no,c,lines,total,extra){
+ var rows=lines.map(function(l){return '<tr><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2">'+esc(l.description)+(l.tech?'<br><span style="color:#6b7770;font-size:12px">Technician: '+esc(l.tech)+'</span>':'')+'</td><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2;text-align:right">'+num(l.qty)+'</td><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2;text-align:right">'+money(l.unit_price)+'</td><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2;text-align:right">'+money(num(l.qty)*num(l.unit_price))+'</td></tr>';}).join('');
+ return '<div style="font-family:Arial,Helvetica,sans-serif;color:#1b2420;max-width:640px;margin:0 auto">'
+ +'<h2 style="margin:0 0 2px">'+esc(C.business)+'</h2><div style="color:#6b7770;margin-bottom:16px">'+esc(C.businessPhone||'')+'</div>'
+ +'<h3 style="margin:0 0 4px">'+kind+' '+esc(no)+'</h3>'
+ +'<p style="margin:0 0 12px">Prepared for <b>'+esc(c.name||'')+'</b><br>'+esc(c.address||'')+'</p>'+(extra||'')
+ +'<table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="background:#f0f4ef"><th style="text-align:left;padding:6px 8px">Service</th><th style="text-align:right;padding:6px 8px">Qty</th><th style="text-align:right;padding:6px 8px">Price</th><th style="text-align:right;padding:6px 8px">Amount</th></tr>'+rows+'</table>'
+ +'<p style="text-align:right;font-size:16px;margin:12px 0"><b>Total '+money(total)+'</b></p></div>';
+}
+function docText(kind,no,c,lines,total){
+ return C.business+'\n'+kind+' '+no+'\nFor: '+(c.name||'')+'\n\n'+lines.map(function(l){return '- '+l.description+' x'+num(l.qty)+' @ '+money(l.unit_price)+' = '+money(num(l.qty)*num(l.unit_price));}).join('\n')+'\n\nTotal: '+money(total)+'\n\nThank you,\n'+C.business+(C.businessPhone?'\n'+C.businessPhone:'');
+}
+function estDoc(e){var c=cust(e.customer_id), its=eItems(e.id).map(function(i){var t=tech(i.tech_id);return {description:i.description,qty:i.qty,unit_price:i.unit_price,tech:t&&t.name};});
+ var tot=eTotal(e.id), extra=e.notes?'<p style="margin:0 0 12px;color:#44504a">'+esc(e.notes)+'</p>':'';
+ return {c:c,no:estNo(e),subject:C.business+' estimate '+estNo(e),html:docHtml('Estimate',estNo(e),c,its,tot,extra),text:docText('Estimate',estNo(e),c,its,tot),total:tot};}
+function invDoc(j){var c=cust(j.customer_id), its=itemsOf(j.id), tot=jobTotal(j), paid=num(j.amount_paid), t=tech(j.tech_id);
+ var extra='<p style="margin:0 0 12px;color:#44504a">Service: '+esc(j.svc)+' on '+esc(longDate(j.date))+'</p>';
+ var foot='<p style="text-align:right;margin:0">Paid '+money(paid)+' · <b>Balance due '+money(Math.max(0,tot-paid))+'</b></p>';
+ return {c:c,no:invNo(j),subject:C.business+' invoice '+invNo(j),html:docHtml('Invoice',invNo(j),c,its,tot,extra).replace(/<\/div>$/,foot+'</div>'),text:docText('Invoice',invNo(j),c,its,tot)+'\nBalance due: '+money(Math.max(0,tot-paid)),total:tot};}
+async function sendDoc(doc){
+ var to=(doc.c.email||'').trim();
+ if(!to){toast('This customer has no email address. Add one on the customer or job first.'); return false;}
+ var r;
+ try{r=await sb.functions.invoke('send-document',{body:{to:to,subject:doc.subject,html:doc.html,text:doc.text}});}catch(e){r={error:e};}
+ if(!r.error&&r.data&&r.data.ok){toast('Sent to '+to); return true;}
+ window.location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(doc.subject)+'&body='+encodeURIComponent(doc.text);
+ toast('Email service is not set up yet, so your mail app was opened instead. It was not marked as sent.');
+ return false;
+}
+function printDoc(doc){var p=$('#printArea'); if(!p){toast('Print area missing'); return;} p.innerHTML=doc.html; window.print();}
+
+/* ---------- render ---------- */
+function render(){
+ var b=$('#invBody'); if(!b) return;
+ if(S.draft){b.innerHTML=editorHtml(); paintDash(); return;}
+ if(S.panel&&S.panel.type==='cv'){b.innerHTML=panelHtml(); paintDash(); return;}
+ var h='';
+ if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> The estimate and service tables are not in your database yet. Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page. Existing invoices below already work.</div>';
+ if(S.panel) h+=panelHtml();
+ h+=invTab()+catalogHtml();
+ b.innerHTML=h; paintDash();
+}
+function pill(s){return '<span class="ipill '+String(s).replace(/\s/g,'')+'">'+esc(s)+'</span>';}
+function estTable(limit){
+ var list=S.estimates.slice(0,limit||8);
+ var rows=list.map(function(e){var c=cust(e.customer_id), its=eItems(e.id), names=uniq(its.map(function(i){var t=tech(i.tech_id);return t?t.name:'Unassigned';})).join(', ');
+  var a='<button class="btn sm" data-act="eprint" data-id="'+e.id+'">Print</button><button class="btn sm" data-act="esend" data-id="'+e.id+'">Send</button>';
+  if(e.status!=='Converted') a='<button class="btn sm" data-act="eedit" data-id="'+e.id+'">Edit</button>'+a;
+  if(e.status==='Draft'||e.status==='Sent') a+='<button class="btn sm" data-act="eappr" data-id="'+e.id+'">Approved</button><button class="btn sm" data-act="edecl" data-id="'+e.id+'">Declined</button>';
+  if(e.status==='Approved') a+='<button class="btn sm primary" data-act="econv" data-id="'+e.id+'">Create job orders</button>';
+  return '<tr><td>'+estNo(e)+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(names)+'</td><td>'+money(eTotal(e.id))+'</td><td>'+pill(e.status)+'</td><td class="iacts">'+a+'</td></tr>';}).join('');
+ return '<div class="scroll"><table class="tbl"><tr><th>#</th><th>Customer</th><th>Technician</th><th>Total</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(S.setup?'No estimates yet. Create one, send it, and convert it to job orders when approved.':'Estimates turn on after the one-time database setup (see the Invoices page).')+'</td></tr>')+'</table></div>';
+}
+function jobTable(){
+ var t0=iso(), list=S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
+ var rows=list.map(function(j){var c=cust(j.customer_id);
+  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
+ return '<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">No upcoming job orders.</td></tr>')+'</table></div>';
+}
+function dashHtml(){
+ return '<div id="invDash"><section class="invcard"><div class="invhead"><h3>Estimates</h3><button class="btn primary" data-act="enew">+ New estimate</button></div>'+estTable(8)+'</section><section class="invcard"><div class="invhead"><h3>Job orders</h3><span class="note">Next 10 upcoming. Change the technician here; times are on the Calendar.</span></div>'+jobTable()+'</section></div>';
+}
+var loading=false;
+function paintDash(){
+ var dv=$('#dashView'); if(!dv) return;
+ var tmp=document.createElement('div'); tmp.innerHTML=dashHtml(); var nu=tmp.firstChild, old=$('#invDash',dv);
+ if(old) old.replaceWith(nu); else dv.appendChild(nu);
+}
+function onDashMut(){
+ var dv=$('#dashView'); if(!dv||!dv.children.length) return;
+ if(!$('#invDash',dv)) paintDash();
+ if(!loading&&Date.now()-(S.t||0)>12000){loading=true; load().then(function(){S.t=Date.now(); paintDash();}).catch(function(){S.t=Date.now();}).then(function(){loading=false;});}
+}
+function invTab(){
+ var jobs=S.jobs.filter(function(j){return j.status!=='Canceled'&&itemsOf(j.id).length&&(!S.filter||j.customer_id===S.filter);});
+ var billed=0,paid=0; jobs.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
+ var opts='<option value="">All customers</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===S.filter?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
+ var rows=jobs.map(function(j){var c=cust(j.customer_id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
+  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'">Send invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
+ return '<div class="invhead"><h3>Invoices</h3><select data-act="ifilter">'+opts+'</select></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">No invoices yet. Invoices are created when a job has billed services.</td></tr>')+'</table></div>';
+}
+function catalogHtml(){
+ var cats=uniq(S.services.map(function(s){return s.category;}));
+ var rows=S.services.map(function(s){return '<tr class="'+(s.active?'':'inactive')+'"><td><input data-cat="'+s.id+'" data-f="name" value="'+esc(s.name)+'"></td><td><input data-cat="'+s.id+'" data-f="category" value="'+esc(s.category)+'" list="invCats"></td><td><select data-cat="'+s.id+'" data-f="job_type">'+JOBTYPES.map(function(t){return '<option'+(t===s.job_type?' selected':'')+'>'+esc(t)+'</option>';}).join('')+'</select></td><td><input data-cat="'+s.id+'" data-f="unit" value="'+esc(s.unit)+'" size="9"></td><td><input data-cat="'+s.id+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(s.unit_price)+'" style="width:90px"></td><td><button class="btn sm" data-act="cact" data-id="'+s.id+'">'+(s.active?'Hide':'Show')+'</button></td></tr>';}).join('');
+ return '<div class="invcat"><div class="invhead"><h3>Service catalog</h3><span class="note">Lawn care services you can add to any estimate. Prices are editable starting points based on typical San Antonio rates.</span></div>'
+ +(S.setup?'':'<p class="note">Showing the starter list. Editing prices and adding your own services turns on after the one-time setup above.</p>')+(S.services.length?'':starterTable())
+ +(S.setup&&!S.services.length?'<p><button class="btn primary" data-act="cseed">Load starter lawn services</button></p>':'')
+ +(S.setup?'<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Category</th><th>Job type</th><th>Unit</th><th>Price</th><th></th></tr>'+rows+'<tr><td><input id="nsName" placeholder="New service name"></td><td><input id="nsCat" placeholder="Category" list="invCats"></td><td><select id="nsType">'+JOBTYPES.map(function(t){return '<option>'+esc(t)+'</option>';}).join('')+'</select></td><td><input id="nsUnit" placeholder="visit" size="9"></td><td><input id="nsPrice" type="number" min="0" step="0.01" placeholder="0.00" style="width:90px"></td><td><button class="btn sm primary" data-act="cadd">Add</button></td></tr></table></div><datalist id="invCats">'+cats.map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>':'')+'</div>';
+}
+function panelHtml(){
+ var P=S.panel;
+ if(P.type==='pay'){var j=S.jobs.find(function(x){return x.id===P.id;}); if(!j) return ''; var tot=jobTotal(j);
+  return '<div class="invpanel"><h3>Payment – '+esc(invNo(j))+' · '+esc(cust(j.customer_id).name||'')+' · '+money(tot)+'</h3><div class="row"><label>Status<select id="pyStatus">'+['Unpaid','Partial','Paid','Refunded'].map(function(s){return '<option'+(s===(j.pay_status||'Unpaid')?' selected':'')+'>'+s+'</option>';}).join('')+'</select></label><label>Amount paid ($)<input id="pyAmt" type="number" min="0" step="0.01" value="'+num(j.amount_paid)+'"></label></div><div class="row"><label>Method<select id="pyMethod">'+['','Cash','Card','Check','Zelle','Venmo','Invoice','Other'].map(function(s){return '<option'+(s===(j.pay_method||'')?' selected':'')+'>'+s+'</option>';}).join('')+'</select></label><label>Payment date<input id="pyDate" type="date" value="'+esc(j.pay_date||iso())+'"></label></div><div class="acts"><button class="btn" data-act="pfull" data-id="'+j.id+'">Mark paid in full</button><div class="grp"><button class="btn" data-act="pclose">Cancel</button><button class="btn primary" data-act="psave" data-id="'+j.id+'">Save payment</button></div></div></div>';}
+ var e=S.estimates.find(function(x){return x.id===P.id;}); if(!e) return '';
+ return '<div class="invpanel"><h3>Create job orders from '+estNo(e)+'</h3><div class="row"><label>Date<input id="cvDate" type="date" value="'+iso()+'"></label><label>Start time<input id="cvStart" type="time" value="08:00"></label></div><div class="scroll"><table class="tbl"><tr><th>Service</th><th>Amount</th><th>Technician</th><th>Hours</th></tr>'+eItems(e.id).map(function(i){return '<tr><td>'+esc(i.description)+'</td><td>'+money(num(i.qty)*num(i.unit_price))+'</td><td><select data-cv="'+i.id+'" data-f="tech">'+techOpts(i.tech_id)+'</select></td><td><input data-cv="'+i.id+'" data-f="dur" type="number" min="0.25" step="0.25" value="1" style="width:70px"></td></tr>';}).join('')+'</table></div><div class="acts"><span class="note">Each service becomes its own job on the calendar with its invoice line.</span><div class="grp"><button class="btn" data-act="pclose">Cancel</button><button class="btn primary" data-act="cvgo" data-id="'+e.id+'">Create job orders</button></div></div></div>';
+}
+
+/* ---------- estimate editor ---------- */
+function newLine(){return {service_id:'',description:'',job_type:'Other',qty:1,unit_price:0,tech_id:''};}
+function editorHtml(){
+ var D=S.draft, tot=D.lines.reduce(function(a,l){return a+num(l.qty)*num(l.unit_price);},0);
+ var copts='<option value="">Select customer…</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===D.customer_id&&!D.newCust?' selected':'')+'>'+esc(c.name)+' – '+esc(c.address)+'</option>';}).join('')+'<option value="__new"'+(D.newCust?' selected':'')+'>+ New customer…</option>';
+ var svcOpts=function(sel){return '<option value="">Custom service</option>'+effServices().filter(function(s){return s.active||s.id===sel;}).map(function(s){return '<option value="'+s.id+'"'+(s.id===sel?' selected':'')+'>'+esc(s.name)+' ('+money(s.unit_price)+'/'+esc(s.unit)+')</option>';}).join('');};
+ var lines=D.lines.map(function(l,i){return '<tr><td><select data-i="'+i+'" data-f="service_id">'+svcOpts(l.service_id)+'</select><input data-i="'+i+'" data-f="description" value="'+esc(l.description)+'" placeholder="Service description" style="margin-top:4px"></td><td><input data-i="'+i+'" data-f="qty" type="number" min="0" step="0.25" value="'+num(l.qty)+'" style="width:70px"></td><td><input data-i="'+i+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(l.unit_price)+'" style="width:90px"></td><td><select data-i="'+i+'" data-f="tech_id">'+techOpts(l.tech_id)+'</select></td><td><button class="btn sm" data-act="lrem" data-id="'+i+'" aria-label="Remove line">✕</button></td></tr>';}).join('');
+ return '<div class="invhead"><h3>'+(D.id?'Edit estimate':'New estimate')+'</h3></div><label>Customer<select id="edCust">'+copts+'</select></label>'
+ +(D.newCust?'<div class="invpanel"><div class="row"><label>Name<input data-nc="name" value="'+esc(D.nc.name)+'"></label><label>Email<input data-nc="email" type="email" value="'+esc(D.nc.email)+'"></label></div><div class="row"><label>Service address<input data-nc="address" value="'+esc(D.nc.address)+'" placeholder="San Antonio, TX"></label><label>Phone<input data-nc="phone" type="tel" value="'+esc(D.nc.phone)+'"></label></div></div>':'')
+ +'<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Qty</th><th>Price</th><th>Assigned technician</th><th></th></tr>'+lines+'</table></div><p><button class="btn" data-act="ladd">+ Add service</button></p>'
+ +'<label>Notes for the customer<textarea id="edNotes" rows="2">'+esc(D.notes)+'</textarea></label><p class="invtotal">Total <b id="edTotal">'+money(tot)+'</b></p>'
+ +'<div class="acts"><button class="btn" data-act="ecancel">Cancel</button><div class="grp"><button class="btn" data-act="esave">Save draft</button><button class="btn primary" data-act="esavesend">Save &amp; send estimate</button></div></div>';
+}
+function openEditor(e){S.panel=null; d.showModal(); startDraft(e);}
+function startDraft(e){
+ S.draft=e?{id:e.id,customer_id:e.customer_id,notes:e.notes||'',newCust:false,nc:{name:'',address:'',phone:'',email:''},lines:eItems(e.id).map(function(i){return {service_id:i.service_id||'',description:i.description,job_type:i.job_type,qty:i.qty,unit_price:i.unit_price,tech_id:i.tech_id||''};})}
+ :{id:null,customer_id:'',notes:'',newCust:false,nc:{name:'',address:'',phone:'',email:''},lines:[newLine()]};
+ render();
+}
+async function saveEstimate(send){
+ var D=S.draft, cid=D.customer_id;
+ if(D.newCust){var nc=D.nc; if(!nc.name.trim()||!nc.address.trim()) return toast('New customer needs a name and service address');
+  var cr=await sb.from('gl_customers').insert({name:nc.name.trim(),address:nc.address.trim(),phone:nc.phone.trim(),email:nc.email.trim()}).select().single();
+  if(cr.error) return toast(cr.error.message); cid=cr.data.id;}
+ if(!cid) return toast('Pick a customer');
+ var lines=D.lines.filter(function(l){return l.description.trim();});
+ if(!lines.length) return toast('Add at least one service');
+ var eid=D.id;
+ if(eid){var u=await sb.from('gl_estimates').update({customer_id:cid,notes:D.notes.trim()}).eq('id',eid); if(u.error) return toast(u.error.message);
+  var dl=await sb.from('gl_estimate_items').delete().eq('estimate_id',eid); if(dl.error) return toast(dl.error.message);}
+ else{var r=await sb.from('gl_estimates').insert({customer_id:cid,notes:D.notes.trim(),status:'Draft',created_by:S.me&&S.me.id||null}).select().single(); if(r.error) return toast(r.error.message); eid=r.data.id;}
+ var ins=await sb.from('gl_estimate_items').insert(lines.map(function(l){return {estimate_id:eid,service_id:(l.service_id&&String(l.service_id).indexOf('starter-')!==0)?l.service_id:null,description:l.description.trim(),job_type:l.job_type||'Other',qty:num(l.qty)||1,unit_price:num(l.unit_price),tech_id:l.tech_id||null};}));
+ if(ins.error) return toast(ins.error.message);
+ S.draft=null; d.close(); await load(); render(); toast('Estimate saved');
+ if(send) await sendEstimate(eid);
+}
+async function sendEstimate(eid){
+ var e=S.estimates.find(function(x){return x.id===eid;}); if(!e) return;
+ if(await sendDoc(estDoc(e))){await sb.from('gl_estimates').update({status:e.status==='Draft'?'Sent':e.status,sent_at:new Date().toISOString()}).eq('id',eid); await reload();}
+}
+async function createJobs(eid){
+ var e=S.estimates.find(function(x){return x.id===eid;}); if(!e) return;
+ var date=$('#cvDate').value, start=$('#cvStart').value; if(!date||!start) return toast('Pick a date and start time');
+ var n=0;
+ for(var its=eItems(eid), k=0;k<its.length;k++){var it=its[k];
+  var tsel=$('[data-cv="'+it.id+'"][data-f="tech"]'), dsel=$('[data-cv="'+it.id+'"][data-f="dur"]');
+  var jr=await sb.from('gl_jobs').insert({customer_id:e.customer_id,svc:JOBTYPES.indexOf(it.job_type)>=0?it.job_type:'Other',notes:it.description+' (from '+estNo(e)+')',tech_id:(tsel&&tsel.value)||null,status:'Scheduled',date:date,start_time:start,dur:Math.max(.25,num(dsel&&dsel.value)||1)}).select().single();
+  if(jr.error){toast('Job not created: '+jr.error.message); break;}
+  var ii=await sb.from('gl_invoice_items').insert({job_id:jr.data.id,description:it.description,qty:it.qty,unit_price:it.unit_price,added_by:S.me&&S.me.id||null});
+  if(ii.error) toast('Invoice line not saved: '+ii.error.message);
+  await sb.from('gl_estimate_items').update({job_id:jr.data.id}).eq('id',it.id); n++;}
+ if(n===its.length) await sb.from('gl_estimates').update({status:'Converted'}).eq('id',eid);
+ S.panel=null; d.close(); await reload(); if(n) toast(n+' job order'+(n>1?'s':'')+' created – see them on the Calendar');
+}
+async function savePay(jid,full){
+ var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return;
+ var status=$('#pyStatus').value, amt=num($('#pyAmt').value);
+ if(full){status='Paid'; amt=jobTotal(j);}
+ var patch={pay_status:status,amount_paid:amt,pay_method:$('#pyMethod').value,pay_date:$('#pyDate').value||null};
+ var r=await sb.from('gl_jobs').update(patch).eq('id',jid); if(r.error) return toast(r.error.message);
+ S.panel=null; await reload(); toast('Payment saved');
+}
+async function sendInvoice(jid){
+ var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return; var doc=invDoc(j);
+ if(await sendDoc(doc)){var now=new Date().toISOString();
+  await sb.from('gl_jobs').update({invoice_sent_at:now}).eq('id',jid);
+  if(S.me) await sb.from('gl_messages').insert({job_id:jid,customer_id:j.customer_id,sender_id:S.me.id,channel:'email',body:doc.text});
+  await reload();}
+}
+var seedBusy=false;
+async function seed(){ if(seedBusy) return; seedBusy=true;
+ var r=await sb.from('gl_services').insert(STARTER.map(function(s){return {name:s[0],category:s[1],job_type:s[2],unit:s[3],unit_price:s[4]};}));
+ seedBusy=false; if(r.error) return toast(r.error.message); await reload(); toast('Starter services loaded – edit any price');
+}
+
+/* ---------- events ---------- */
+var body=$('#invBody');
+var onClick=async function(ev){
+ var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act, id=b.dataset.id;
+ if(a==='enew'){openEditor(null);}
+ else if(a==='eedit'){openEditor(S.estimates.find(function(x){return x.id===id;}));}
+ else if(a==='ecancel'){S.draft=null;S.panel=null;d.close();render();}
+ else if(a==='ladd'){S.draft.lines.push(newLine());render();}
+ else if(a==='lrem'){S.draft.lines.splice(+id,1); if(!S.draft.lines.length) S.draft.lines.push(newLine()); render();}
+ else if(a==='esave'){await saveEstimate(false);}
+ else if(a==='esavesend'){await saveEstimate(true);}
+ else if(a==='esend'){await sendEstimate(id);}
+ else if(a==='eprint'){printDoc(estDoc(S.estimates.find(function(x){return x.id===id;})));}
+ else if(a==='eappr'||a==='edecl'){var r=await sb.from('gl_estimates').update({status:a==='eappr'?'Approved':'Declined'}).eq('id',id); if(r.error) toast(r.error.message); await reload();}
+ else if(a==='econv'){S.draft=null;S.panel={type:'cv',id:id};d.showModal();render();}
+ else if(a==='cvgo'){await createJobs(id);}
+ else if(a==='pclose'){var wasCv=S.panel&&S.panel.type==='cv'; S.panel=null; if(wasCv) d.close(); render();}
+ else if(a==='ipay'){S.panel={type:'pay',id:id};render(); body.scrollTop=0; d.scrollTop=0;}
+ else if(a==='psave'){await savePay(id,false);}
+ else if(a==='pfull'){await savePay(id,true);}
+ else if(a==='isend'){await sendInvoice(id);}
+ else if(a==='iprint'){printDoc(invDoc(S.jobs.find(function(x){return x.id===id;})));}
+ else if(a==='cseed'){await seed();}
+ else if(a==='cadd'){var nm=$('#nsName').value.trim(); if(!nm) return toast('Enter a service name');
+  var r2=await sb.from('gl_services').insert({name:nm,category:$('#nsCat').value.trim()||'Other',job_type:$('#nsType').value,unit:$('#nsUnit').value.trim()||'visit',unit_price:num($('#nsPrice').value)}); if(r2.error) return toast(r2.error.message); await reload(); toast('Service added');}
+ else if(a==='cact'){var s=S.services.find(function(x){return x.id===id;}); var r3=await sb.from('gl_services').update({active:!s.active}).eq('id',id); if(r3.error) toast(r3.error.message); await reload();}
+};
+var onChange=async function(ev){
+ var t=ev.target;
+ if(t.dataset.act==='ifilter'){S.filter=t.value;render();return;}
+ if(t.dataset.act==='jtech'){var r=await sb.from('gl_jobs').update({tech_id:t.value||null}).eq('id',t.dataset.id); if(r.error) toast(r.error.message); else toast('Technician updated'); await reload(); return;}
+ if(t.dataset.cat){var v=t.type==='number'?num(t.value):t.value.trim(); if(t.dataset.f==='name'&&!v) return reload(); var p={}; p[t.dataset.f]=v; var r4=await sb.from('gl_services').update(p).eq('id',t.dataset.cat); if(r4.error) toast(r4.error.message); else toast('Saved'); await reload(); return;}
+ if(!S.draft) return;
+ if(t.id==='edCust'){if(t.value==='__new'){S.draft.newCust=true;S.draft.customer_id='';}else{S.draft.newCust=false;S.draft.customer_id=t.value;} render(); return;}
+ if(t.dataset.i!==undefined){var l=S.draft.lines[+t.dataset.i], f=t.dataset.f;
+  if(f==='service_id'){l.service_id=t.value; var s=effServices().find(function(x){return x.id===t.value;}); if(s){l.description=s.name;l.unit_price=s.unit_price;l.job_type=s.job_type;} render(); return;}
+  l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
+};
+body.addEventListener('click',onClick); body.addEventListener('change',onChange);
+document.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('#invDash')) onClick(ev);});
+document.addEventListener('change',function(ev){if(ev.target.closest&&ev.target.closest('#invDash')) onChange(ev);});
+body.addEventListener('input',function(ev){
+ var t=ev.target; if(!S.draft) return;
+ if(t.id==='edNotes') S.draft.notes=t.value;
+ else if(t.dataset.nc) S.draft.nc[t.dataset.nc]=t.value;
+ else if(t.dataset.i!==undefined&&t.tagName==='INPUT'){var l=S.draft.lines[+t.dataset.i], f=t.dataset.f; l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
+});
+d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
+var dvEl=$('#dashView'); if(dvEl) new MutationObserver(onDashMut).observe(dvEl,{childList:true}); setTimeout(onDashMut,1500);
+var btn=$('#invBtn'); if(btn) btn.addEventListener('click',function(){S.draft=null;S.panel=null;d.showModal();body.innerHTML='<p class="note">Loading…</p>';reload().catch(function(e){body.innerHTML='<p class="err">Could not load: '+esc(e.message)+'</p>';});});
+})();
+</script>
 </body>
 </html>
