@@ -403,7 +403,7 @@ function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catc
 var sb=supabase.createClient(C.url,C.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'gl-inv'},global:{fetch:function(u,o){var s=stored(),h=new Headers((o&&o.headers)||{}); if(s&&s.access_token) h.set('Authorization','Bearer '+s.access_token); return fetch(u,Object.assign({},o,{headers:h}));}}});
 var $=function(s,r){return (r||document).querySelector(s);};
 var d=$('#invDlg'); if(!d||d.__inv) return; d.__inv=1;
-var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:'',ifq:'',ist:'',ipay:'',itech:'',idate:'',idto:'',ilim:10,oq:'',ost:'',osvc:'',ocust:'',odate:'',odto:'',olim:10,cat:{mode:"",id:"",vals:{}}};
+var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:'',ifq:'',ist:'',ipay:'',itech:'',idate:'',idto:'',ilim:10,oq:'',ost:'',osvc:'',ocust:'',odate:'',odto:'',olim:10,ipage:0,opage:0,cat:{mode:"",id:"",vals:{}}};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var num=function(n){return +n||0;};
 var money=function(n){return '$'+num(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
@@ -515,7 +515,7 @@ function ordFiltered(){
 }
 function ordPage(){
  var o=function(v,l,cur){return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+l+'</option>';};
- var all=ordFiltered(), list=all.slice(0,S.olim);
+ var all=ordFiltered(), pgO=Math.min(S.opage,Math.max(0,Math.ceil(all.length/S.olim)-1)); S.opage=pgO; var list=all.slice(pgO*S.olim,(pgO+1)*S.olim);
  var bar='<div class="invfilt"><input id="oq" type="search" placeholder="Search customer, address, service, technician" value="'+esc(S.oq)+'">'
  +'<select data-of="ocust">'+o('','All customers',S.ocust)+S.customers.map(function(c){return o(c.id,esc(c.name),S.ocust);}).join('')+'</select>'
  +'<select data-of="ost">'+o('','All statuses',S.ost)+['Scheduled','In progress','Completed','Pending approval','Canceled'].map(function(x){return o(x,x,S.ost);}).join('')+'</select>'
@@ -525,7 +525,7 @@ function ordPage(){
  var rows=list.map(function(j){var c=cust(j.customer_id);
   return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'<br><span class="note">'+esc(c.address||'No address on file')+'</span></td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
  var more='<div class="invmore"><span class="note">Showing '+list.length+' of '+all.length+'</span>'+(all.length>list.length?'<button class="btn sm" data-act="omore">Show 10 more</button><button class="btn sm" data-act="oall">Show all</button>':'')+(S.olim>10&&list.length>10?'<button class="btn sm" data-act="ofewer">Show fewer</button>':'')+'</div>';
- return '<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+bar+'<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(ordHasF()?'No job orders match your search or filters.':'No job orders yet.')+'</td></tr>')+'</table></div>'+(all.length?more:'');
+ return '<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+bar+'<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(ordHasF()?'No job orders match your search or filters.':'No job orders yet.')+'</td></tr>')+'</table></div>'+pager(all.length,S.olim,S.opage,'o');
 }
 function jobTable(all){
  var t0=iso(), list=all?S.jobs.slice(0,100):S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
@@ -568,13 +568,20 @@ function onDashMut(){
  if(!$('#invDash',dv)) paintDash();
  if(!loading&&Date.now()-(S.t||0)>12000){loading=true; load().then(function(){S.t=Date.now(); paintDash();}).catch(function(){S.t=Date.now();}).then(function(){loading=false;});}
 }
+function pager(total,size,page,pre){
+ if(!total) return '';
+ var pages=Math.max(1,Math.ceil(total/size)), all=size>=100000, from=page*size+1, to=Math.min(total,(page+1)*size);
+ return '<div class="invmore"><span class="note">Showing '+(all?1:from)+'–'+(all?total:to)+' of '+total+'</span>'
+ +(!all&&pages>1?'<button class="btn sm" data-act="'+pre+'prev"'+(page<=0?' disabled':'')+'>‹ Previous</button><span class="note">Page '+(page+1)+' of '+pages+'</span><button class="btn sm" data-act="'+pre+'next"'+(page>=pages-1?' disabled':'')+'>Next ›</button>':'')
+ +(all?'<button class="btn sm" data-act="'+pre+'fewer">Show pages</button>':(pages>1?'<button class="btn sm" data-act="'+pre+'all">Show all</button>':''))+'</div>';
+}
 function invTab(){
- var all=invFiltered(), jobs=all.slice(0,S.ilim);
+ var all=invFiltered(), pgI=Math.min(S.ipage,Math.max(0,Math.ceil(all.length/S.ilim)-1)); S.ipage=pgI; var jobs=all.slice(pgI*S.ilim,(pgI+1)*S.ilim);
  var billed=0,paid=0; all.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
  var opts='<option value="">All customers</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===S.filter?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
  var rows=jobs.map(function(j){var c=cust(j.customer_id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
   return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm primary" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Email invoice</button><button class="btn sm primary" data-act="itext" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Text invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
- return '<div class="invhead"><h3>Invoices</h3><span class="note">Email or text the invoice to the customer once the job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+moreBar(all,jobs);
+ return '<div class="invhead"><h3>Invoices</h3><span class="note">Email or text the invoice to the customer once the job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+pager(all.length,S.ilim,S.ipage,'i');
 }
 function hasF(){return !!(S.ifq||S.ist||S.ipay||S.itech||S.idate||S.idto||S.filter);}
 function invFiltered(){
@@ -884,14 +891,16 @@ if(nvBody){
   else if(a==='inadd'){readNv();S.panel.lines.push(nvLine());redo();}
   else if(a==='inrem'){readNv();S.panel.lines.splice(+b.dataset.id,1);if(!S.panel.lines.length)S.panel.lines.push(nvLine());redo();}
   else if(a==='increate'){createInvoice();}
+  else if(a==='iprev'){S.ipage=Math.max(0,S.ipage-1);redo();}
+  else if(a==='inext'){S.ipage++;redo();}
   else if(a==='imore'){S.ilim+=10;redo();}
   else if(a==='iall'){S.ilim=100000;redo();}
-  else if(a==='ifewer'){S.ilim=10;redo();}
-  else if(a==='iclear'){S.ifq='';S.ist='';S.ipay='';S.itech='';S.idate='';S.idto='';S.filter='';S.ilim=10;redo();}
+  else if(a==='ifewer'){S.ilim=10;S.ipage=0;redo();}
+  else if(a==='iclear'){S.ifq='';S.ist='';S.ipay='';S.itech='';S.idate='';S.idto='';S.filter='';S.ilim=10;S.ipage=0;redo();}
  });
  nvBody.addEventListener('input',function(ev){
   var t=ev.target;
-  if(t.id==='ifq'){var pos=t.selectionStart; S.ifq=t.value; S.ilim=10; redo(); var n=$('#ifq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}} return;}
+  if(t.id==='ifq'){var pos=t.selectionStart; S.ifq=t.value; S.ilim=10;S.ipage=0; redo(); var n=$('#ifq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}} return;}
   if(t.dataset.nl!==undefined&&S.panel&&S.panel.type==='inew'){
    readNv();
    var i=+t.dataset.nl, l=S.panel.lines[i];
@@ -902,7 +911,7 @@ if(nvBody){
  });
  nvBody.addEventListener('change',function(ev){
   var t=ev.target;
-  if(t.dataset.if){S[t.dataset.if]=t.value; S.ilim=10; redo();}
+  if(t.dataset.if){S[t.dataset.if]=t.value; S.ilim=10;S.ipage=0; redo();}
   else if(t.id==='nvType'){readNv();nvAuto();redo();} else if(t.id==='nvCust'||t.id==='nvTech'||t.id==='nvDate'){readNv();}
  });
 }
@@ -911,17 +920,19 @@ if(ordB){
  var oredo=function(){ordB.innerHTML=ordPage();};
  ordB.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act;
-  if(a==='omore'){S.olim+=10;oredo();}
+  if(a==='oprev'){S.opage=Math.max(0,S.opage-1);oredo();}
+  else if(a==='onext'){S.opage++;oredo();}
+  else if(a==='omore'){S.olim+=10;oredo();}
   else if(a==='oall'){S.olim=100000;oredo();}
-  else if(a==='ofewer'){S.olim=10;oredo();}
-  else if(a==='oclear'){S.oq='';S.ost='';S.osvc='';S.ocust='';S.odate='';S.odto='';S.olim=10;oredo();}
+  else if(a==='ofewer'){S.olim=10;S.opage=0;oredo();}
+  else if(a==='oclear'){S.oq='';S.ost='';S.osvc='';S.ocust='';S.odate='';S.odto='';S.olim=10;S.opage=0;oredo();}
  });
  ordB.addEventListener('input',function(ev){
   var t=ev.target; if(t.id!=='oq') return;
-  var pos=t.selectionStart; S.oq=t.value; S.olim=10; oredo(); var n=$('#oq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}}
+  var pos=t.selectionStart; S.oq=t.value; S.olim=10;S.opage=0; oredo(); var n=$('#oq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}}
  });
  ordB.addEventListener('change',function(ev){
-  var t=ev.target; if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10; oredo();}
+  var t=ev.target; if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10;S.opage=0; oredo();}
  });
 }
 var catB=$('#catBody');
