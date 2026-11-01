@@ -3,54 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tech Dispatch Calendar – Greenlight Lawn Care</title>
+<title>Greenlight Dispatch Portal</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
-<div class="wrap">
+
+<!-- ===== LOGIN ===== -->
+<section id="loginView" class="login" hidden>
+  <form class="card" id="loginForm">
+    <h1>Greenlight Dispatch</h1>
+    <p class="sub" id="loginMsg">Sign in as Admin or Technician.</p>
+    <label>Email<input id="lEmail" type="email" required autocomplete="email"></label>
+    <label>Password<input id="lPass" type="password" minlength="6" required autocomplete="current-password"></label>
+    <button class="btn primary" type="submit" id="lSubmit">Sign in</button>
+    <div class="row2">
+      <button type="button" class="link" id="lToggle">First time? Create your account</button>
+      <button type="button" class="link" id="lForgot">Forgot password</button>
+    </div>
+    <p class="note">Technicians: use the email your admin added for you.</p>
+  </form>
+</section>
+
+<section id="noAccess" class="login" hidden>
+  <div class="card"><h1>No access yet</h1><p class="sub">This email isn't set up in Greenlight Dispatch. Ask your admin to add you as a technician, then sign in again.</p><button class="btn" data-signout>Sign out</button></div>
+</section>
+
+<!-- ===== APP ===== -->
+<div class="wrap" id="appView" hidden>
   <header class="bar">
     <div>
-      <h1>Tech Dispatch Calendar</h1>
-      <p class="sub">Greenlight Lawn Care · Each technician's jobs by month, week or day. Click a day or time slot to add a job; click a job to edit it.</p>
+      <h1 id="appTitle">Tech Dispatch Calendar</h1>
+      <p class="sub" id="whoami"></p>
     </div>
     <div class="grp">
-      <label class="role">Role
-        <select id="roleSel"><option value="admin">Admin</option></select>
-      </label>
       <button class="btn admin-only" id="techBtn">Manage technicians</button>
       <button class="btn admin-only" id="dlBtn">Download jobs</button>
+      <button class="btn" data-signout>Sign out</button>
     </div>
   </header>
 
-  <div class="bar">
-    <div class="grp">
-      <button class="btn" id="prev" aria-label="Previous">‹</button>
-      <button class="btn" id="todayBtn">Today</button>
-      <button class="btn" id="next" aria-label="Next">›</button>
-      <span class="range" id="range"></span>
+  <div class="bar admin-only">
+    <div class="seg" role="group" aria-label="Section">
+      <button data-atab="dash" aria-pressed="true">Dashboard</button><button data-atab="cal" aria-pressed="false">Calendar</button>
     </div>
-    <div class="grp">
-      <div class="seg" role="group" aria-label="View">
-        <button data-v="month">Month</button><button data-v="week">Week</button><button data-v="day">Day</button>
+  </div>
+  <div id="dashView" class="dash admin-only"></div>
+
+  <div class="bar tech-only" id="techTabs">
+    <div class="seg" role="group" aria-label="Section">
+      <button data-tab="list" aria-pressed="true">My jobs</button><button data-tab="cal" aria-pressed="false">Schedule</button><button data-tab="msg" aria-pressed="false">Messages <span class="badge" id="techUnread" hidden></span></button>
+    </div>
+    <span class="note" id="pendingNote"></span>
+  </div>
+  <div class="locbar tech-only" id="locBar">
+    <span id="locText">Location sharing is off. Turn it on so the office can see where you are while you work.</span>
+    <button class="btn" id="locToggle">Share my location</button>
+  </div>
+  <div id="techMsgView" class="tech-only panel" hidden></div>
+
+  <div id="listView" class="tech-only joblist"></div>
+
+  <div id="calWrap">
+    <div class="bar">
+      <div class="grp">
+        <button class="btn" id="prev" aria-label="Previous">‹</button>
+        <button class="btn" id="todayBtn">Today</button>
+        <button class="btn" id="next" aria-label="Next">›</button>
+        <span class="range" id="range"></span>
       </div>
-      <select id="techSel" aria-label="Technician"></select>
-      <input id="custQ" type="search" placeholder="Customer or address" aria-label="Customer search">
-      <select id="payF" aria-label="Payment filter"><option value="all">All payments</option><option>Paid</option><option>Unpaid</option><option>Partial</option></select>
-      <button class="btn primary" id="addBtn">+ New job</button>
+      <div class="grp">
+        <div class="seg" role="group" aria-label="View">
+          <button data-v="month">Month</button><button data-v="week">Week</button><button data-v="day">Day</button>
+        </div>
+        <select id="techSel" class="admin-only" aria-label="Technician"></select>
+        <input id="custQ" type="search" placeholder="Customer or address" aria-label="Customer search">
+        <select id="payF" aria-label="Payment filter"><option value="all">All payments</option><option>Paid</option><option>Unpaid</option><option>Partial</option></select>
+        <button class="btn primary admin-only" id="addBtn">+ New job</button>
+      </div>
     </div>
+    <div class="bar admin-only"><div class="techs" id="chips"></div></div>
+    <div class="summary" id="summary"></div>
+    <div class="cal"><div class="scroll" id="view"></div></div>
   </div>
-
-  <div class="bar">
-    <div class="techs" id="chips"></div>
-    <span class="note">Changes save automatically in this browser. <button class="link admin-only" id="clearSample">Clear sample data</button></span>
-  </div>
-
-  <div class="summary admin-only" id="summary"></div>
-  <div class="cal"><div class="scroll" id="view"></div></div>
 </div>
 
-<!-- Job form -->
+<!-- ===== CHAT ===== -->
+<dialog id="chatDlg">
+  <div class="f">
+    <div class="det-h"><h2 id="chatTitle">Messages</h2><button class="btn" data-close>Close</button></div>
+    <div id="chatBody"></div>
+  </div>
+</dialog>
+
+<!-- ===== JOB (admin edit) ===== -->
 <dialog id="jobDlg">
   <form class="f" id="jobForm">
     <h2 id="jobTitle">New job</h2>
@@ -61,65 +110,48 @@
       <div class="row"><label>Phone<input id="fPhone" type="tel"></label><label>Email<input id="fEmail" type="email"></label></div>
     </fieldset>
     <fieldset><legend>Service</legend>
-      <div class="row">
-        <label>Service type<select id="fSvc"></select></label>
-        <label>Technician<select id="fTech"></select></label>
-      </div>
+      <div class="row"><label>Service type<select id="fSvc"></select></label><label>Technician<select id="fTech"></select></label></div>
       <label>Service notes<input id="fNotes"></label>
       <div class="row">
         <label>Status<select id="fStatus"><option>Scheduled</option><option>In progress</option><option>Completed</option><option>Pending approval</option><option>Canceled</option></select></label>
         <label>Date<input id="fDate" type="date" required></label>
       </div>
-      <div class="row">
-        <label>Start<input id="fStart" type="time" step="900" required></label>
-        <label>Duration (hrs)<input id="fDur" type="number" min="0.25" max="12" step="0.25" required></label>
-      </div>
+      <div class="row"><label>Start<input id="fStart" type="time" step="900" required></label><label>Duration (hrs)<input id="fDur" type="number" min="0.25" max="12" step="0.25" required></label></div>
+      <label id="fPriceL">Starting price for invoice ($)<input id="fPrice" type="number" min="0" step="0.01" placeholder="Adds the service as the first invoice line"></label>
     </fieldset>
-    <fieldset class="admin-only"><legend>Payment</legend>
-      <div class="row">
-        <label>Price ($)<input id="fPrice" type="number" min="0" step="0.01"></label>
-        <label>Payment status<select id="fPayS"><option>Unpaid</option><option>Partial</option><option>Paid</option><option>Refunded</option></select></label>
-      </div>
-      <div class="row">
-        <label>Amount paid ($)<input id="fPaid" type="number" min="0" step="0.01"></label>
-        <label>Balance due<input id="fBal" readonly></label>
-      </div>
-      <div class="row">
-        <label>Method<select id="fMethod"><option></option><option>Cash</option><option>Card</option><option>Check</option><option>Zelle</option><option>Venmo</option><option>Invoice</option><option>Other</option></select></label>
-        <label>Payment date<input id="fPayD" type="date"></label>
-      </div>
-      <label>Receipt / invoice #<input id="fRcpt"></label>
-    </fieldset>
-    <div class="confirm" id="delConfirm" hidden>Delete this job? <button type="button" class="btn danger" id="delYes">Yes, delete</button> <button type="button" class="btn" id="delNo">No</button></div>
+    <div class="confirm" id="delConfirm" hidden>Delete this job and its invoice? <button type="button" class="btn danger" id="delYes">Yes, delete</button> <button type="button" class="btn" id="delNo">No</button></div>
+    <p class="err" id="jobErr" hidden></p>
     <div class="acts">
-      <button type="button" class="btn danger admin-only" id="delBtn">Delete</button>
+      <button type="button" class="btn danger" id="delBtn">Delete</button>
       <div class="grp"><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn primary">Save job</button></div>
     </div>
   </form>
 </dialog>
 
-<!-- Technicians -->
+<!-- ===== JOB DETAIL (admin + tech) ===== -->
+<dialog id="detDlg" class="wide">
+  <div class="f" id="detBody"></div>
+</dialog>
+
+<!-- ===== TECHNICIANS ===== -->
 <dialog id="techDlg" class="wide">
   <div class="f">
     <h2>Manage technicians</h2>
+    <p class="note">Add a technician with their email. They then open this portal, choose “Create your account” with that same email, and see only their own jobs.</p>
     <div class="scroll"><table class="tbl" id="techTbl"></table></div>
     <form id="techForm" class="tform">
       <h3 id="techFormTitle">+ Add technician</h3>
-      <div class="row">
-        <label>Name<input id="tName" required></label>
-        <label>Phone<input id="tPhone" type="tel"></label>
-      </div>
-      <div class="row">
-        <label>Email<input id="tEmail" type="email"></label>
-        <label>Color<div class="swatches" id="tColors"></div></label>
-      </div>
+      <div class="row"><label>Name<input id="tName" required></label><label>Email (their login)<input id="tEmail" type="email" required></label></div>
+      <div class="row"><label>Phone<input id="tPhone" type="tel"></label><label>Role<select id="tRole"><option value="tech">Technician</option><option value="admin">Admin</option></select></label></div>
+      <label>Color<div class="swatches" id="tColors"></div></label>
       <div class="confirm" id="deactBox" hidden></div>
+      <p class="err" id="techErr" hidden></p>
       <div class="acts"><button type="button" class="btn" id="tReset">Clear</button><div class="grp"><button type="button" class="btn" data-close>Close</button><button type="submit" class="btn primary" id="tSave">Add technician</button></div></div>
     </form>
   </div>
 </dialog>
 
-<!-- Download -->
+<!-- ===== DOWNLOAD ===== -->
 <dialog id="dlDlg" class="wide">
   <form class="f" id="dlForm">
     <h2>Download jobs</h2>
@@ -127,13 +159,8 @@
       <label>Period<select id="dPeriod"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="custom">Custom range</option></select></label>
       <label id="dDateL">Date<input id="dDate" type="date"></label>
     </div>
-    <div class="row" id="dMonthRow" hidden>
-      <label>Month<input id="dMonth" type="month"></label><span></span>
-    </div>
-    <div class="row" id="dRangeRow" hidden>
-      <label>Start date<input id="dStart" type="date"></label>
-      <label>End date<input id="dEnd" type="date"></label>
-    </div>
+    <div class="row" id="dMonthRow" hidden><label>Month<input id="dMonth" type="month"></label><span></span></div>
+    <div class="row" id="dRangeRow" hidden><label>Start date<input id="dStart" type="date"></label><label>End date<input id="dEnd" type="date"></label></div>
     <button type="button" class="btn" id="dUseView">Use current calendar view</button>
     <div class="row">
       <label>Group / filter by<select id="dGroup"><option value="all">All jobs</option><option value="tech">Per technician</option><option value="cust">Per customer</option></select></label>
@@ -149,7 +176,9 @@
   </form>
 </dialog>
 
+<div class="toast" id="toast" hidden></div>
 <div id="printArea"></div>
+<script src="config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
