@@ -322,7 +322,8 @@ function renderTechDash() {
     const b2 = mk("navNext", "▸ Next 7 days", "#tdNext"), b1 = mk("navAttn", "! Needs attention", "#tdAttn");
     dashBtn.after(b1); b1.after(b2);
   }
-  if (!window.__catObs) { window.__catObs = new MutationObserver(() => { dv.querySelectorAll(".invcard").forEach(s => { const t = s.querySelector("h3"); if (t && /^Service Catalog/.test(t.textContent)) s.remove(); }); }); window.__catObs.observe(dv, {childList: true}); }
+  if (!window.__catObs) { window.__catObs = new MutationObserver(() => { dv.querySelectorAll(".invcard").forEach(s => { const t = s.querySelector("h3"); if (t && /(estimate|job order|invoice|service catalog)/i.test(t.textContent)) s.remove(); }); }); window.__catObs.observe(dv, {childList: true}); }
+  dv.querySelectorAll(".invcard").forEach(s => { const t = s.querySelector("h3"); if (t && /(estimate|job order|invoice|service catalog)/i.test(t.textContent)) s.remove(); });
   $("#summary").hidden = true;
 }
 function alertRow(j, label) { const c = cust(j.customer_id);
