@@ -499,7 +499,7 @@ function techTable() {
   $("#techTbl").innerHTML = `<tr><th></th><th>Name</th><th>Login email</th><th>Phone</th><th>Role</th><th>Login</th><th>Status</th><th>Jobs this month</th><th></th></tr>` +
     staff.map(t => { const n = jobs.filter(j => j.tech_id === t.id && parse(j.date).getMonth() === m && parse(j.date).getFullYear() === y).length;
       return `<tr class="${t.active?"":"inactive"}"><td><span class="dot" style="--c:${esc(t.color)}"></span></td><td>${esc(t.name)}</td><td>${esc(t.email)}</td><td>${esc(t.phone)}</td><td>${t.role === "admin" ? "Admin" : "Tech"}</td><td>${t.user_id ? "Account created" : "Not signed up yet"}</td><td>${t.active?"Active":"Inactive"}</td><td>${n}</td>
-      <td>${t.id === me.id ? "You" : `<button class="btn sm" data-edit="${t.id}">Edit</button> <button class="btn sm" data-act="${t.id}">${t.active?"Deactivate":"Reactivate"}</button>`}</td></tr>`; }).join("");
+      <td>${t.id === me.id ? "You" : `<button class="btn sm" data-edit="${t.id}">Edit</button> ${t.role==="admin"?"":`<button class="btn sm" data-pw="${t.id}">${t.user_id?"Reset password":"Set password"}</button> `}<button class="btn sm" data-act="${t.id}">${t.active?"Deactivate":"Reactivate"}</button>`}</td></tr>`; }).join("");
 }
 function swatches() {
   const used = new Set(staff.filter(t => t !== tEdit && t.active).map(t => t.color));
@@ -510,7 +510,30 @@ $("#tColors").onclick = e => { const b = e.target.closest(".sw"); if (!b || b.di
 function resetTechForm() { tEdit = null; tColor = null; $("#techForm").reset(); $("#tEmail").disabled = false; $("#techFormTitle").textContent = "+ Add technician"; $("#tSave").textContent = "Add technician"; $("#deactBox").hidden = true; showErr($("#techErr")); swatches(); }
 $("#tReset").onclick = resetTechForm;
 $("#techBtn").onclick = () => { resetTechForm(); techTable(); techDlg.showModal(); };
+function openPw(t) {
+  const box = $("#pwBox"); if (!t) return; box.hidden = false;
+  const noEmail = !t.email || /@example\.com$/i.test(t.email);
+  box.innerHTML = `<b>${t.user_id ? "Reset password" : "Set up login"} for ${esc(t.name)}</b><div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0"><input id="pwEmail" type="email" placeholder="Login email" value="${noEmail ? "" : esc(t.email)}" style="flex:1;min-width:180px" ${t.user_id ? "disabled" : ""}><input id="pwVal" type="text" placeholder="New password (8+ characters)" autocomplete="off" style="flex:1;min-width:180px"></div><button type="button" class="btn primary" id="pwGo">${t.user_id ? "Reset password" : "Create login"}</button> <button type="button" class="btn" id="pwNo">Cancel</button> <span id="pwMsg" class="muted"></span>`;
+  $("#pwNo").onclick = () => { box.hidden = true; box.innerHTML = ""; };
+  $("#pwGo").onclick = async () => {
+    const pw = $("#pwVal").value, em = $("#pwEmail").value.trim(), msg = $("#pwMsg");
+    if (pw.length < 8) { msg.textContent = "Password must be at least 8 characters."; return; }
+    if (!t.user_id && !/^\S+@\S+\.\S+$/.test(em)) { msg.textContent = "Enter a valid login email."; return; }
+    msg.textContent = "Saving…"; $("#pwGo").disabled = true;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch(C.url + "/functions/v1/manage-tech-login", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + session.access_token, apikey: C.key }, body: JSON.stringify({ staff_id: t.id, password: pw, email: t.user_id ? undefined : em }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || ("Failed (" + r.status + ")"));
+      $("#pwVal").value = ""; msg.textContent = j.created ? "Login created. Share the email and password with the technician." : "Password updated.";
+      try { await loadAll(); techTable(); } catch (e) {}
+    } catch (err) { msg.textContent = "Error: " + err.message; }
+    $("#pwGo").disabled = false;
+  };
+}
 $("#techTbl").onclick = async e => {
+  const pwb = e.target.closest("[data-pw]");
+  if (pwb) { openPw(tech(pwb.dataset.pw)); return; }
   const ed = e.target.closest("[data-edit]"), ac = e.target.closest("[data-act]");
   if (ed) { tEdit = tech(ed.dataset.edit); tColor = tEdit.color; $("#tName").value = tEdit.name; $("#tEmail").value = tEdit.email; $("#tEmail").disabled = !!tEdit.user_id; $("#tPhone").value = tEdit.phone; $("#tRole").value = tEdit.role;
     $("#techFormTitle").textContent = "Edit " + tEdit.name; $("#tSave").textContent = "Save changes"; swatches(); $("#tName").focus(); }
