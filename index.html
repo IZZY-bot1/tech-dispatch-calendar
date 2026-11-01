@@ -11,80 +11,103 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style id="techPage">
 /* Manage technicians, Download jobs and Invoices open inside the main window (sidebar stays) */
-#techDlg,#dlDlg,#invDlg,#estDlg,#ordDlg,#cmmDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
-#techDlg>.f,#dlDlg>.f,#invDlg>.f,#estDlg>.f,#ordDlg>.f,#cmmDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
+#techDlg,#dlDlg,#invDlg,#estDlg,#ordDlg,#cmmDlg,#catDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
+#techDlg>.f,#dlDlg>.f,#invDlg>.f,#estDlg>.f,#ordDlg>.f,#cmmDlg>.f,#catDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
 #invDlg>.f{max-width:1240px;display:block}
 #estDlg>.f{max-width:1240px;display:block}
-#ordDlg>.f{max-width:1240px;display:block}
+#ordDlg>.f,
+#catDlg>.f{max-width:1240px;display:block}
 #dlDlg>.f{max-width:760px}
 #techDlg .scroll{max-height:none;overflow-x:auto}
 #techDlg .tform{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
 #invDlg .det-h{margin-bottom:14px}
 #estDlg .det-h{margin-bottom:14px}
-#ordDlg .det-h{margin-bottom:14px}
+#ordDlg .det-h,
+#catDlg .det-h{margin-bottom:14px}
 #invDlg h3{margin:0;font:700 16px var(--display)}
 #estDlg h3{margin:0;font:700 16px var(--display)}
-#ordDlg h3{margin:0;font:700 16px var(--display)}
+#ordDlg h3,
+#catDlg h3{margin:0;font:700 16px var(--display)}
 #invDlg .invtabs{margin-bottom:14px}
 #estDlg .invtabs{margin-bottom:14px}
-#ordDlg .invtabs{margin-bottom:14px}
+#ordDlg .invtabs,
+#catDlg .invtabs{margin-bottom:14px}
 #invDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
 #estDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
-#ordDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+#ordDlg .invhead,
+#catDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
 #invDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
 #estDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
-#ordDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
+#ordDlg .scroll,
+#catDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
 #invDlg .tbl td,#invDlg .tbl th{vertical-align:top}
 #estDlg .tbl td,#estDlg .tbl th{vertical-align:top}
-#ordDlg .tbl td,#ordDlg .tbl th{vertical-align:top}
+#ordDlg .tbl td,#ordDlg .tbl th,
+#catDlg .tbl td,#catDlg .tbl th{vertical-align:top}
 #invDlg input,#invDlg select,#invDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
 #estDlg input,#estDlg select,#estDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
-#ordDlg input,#ordDlg select,#ordDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+#ordDlg input,#ordDlg select,#ordDlg textarea,
+#catDlg input,#catDlg select,#catDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
 #invDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
 #estDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
-#ordDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
+#ordDlg label,
+#catDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
 #invDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 #estDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-#ordDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#ordDlg .row,
+#catDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 #invDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
 #estDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
-#ordDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
+#ordDlg .iacts,
+#catDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
 #invDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
 #estDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
-#ordDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
+#ordDlg .invstats,
+#catDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
 #invDlg .invstats b{color:var(--fg);font-family:var(--mono)}
 #estDlg .invstats b{color:var(--fg);font-family:var(--mono)}
-#ordDlg .invstats b{color:var(--fg);font-family:var(--mono)}
+#ordDlg .invstats b,
+#catDlg .invstats b{color:var(--fg);font-family:var(--mono)}
 #invDlg .invtotal{text-align:right;font-size:16px}
 #estDlg .invtotal{text-align:right;font-size:16px}
-#ordDlg .invtotal{text-align:right;font-size:16px}
+#ordDlg .invtotal,
+#catDlg .invtotal{text-align:right;font-size:16px}
 #invDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
 #estDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
-#ordDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
+#ordDlg .invpanel,
+#catDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
 #invDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
 #estDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
-#ordDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+#ordDlg .invwarn,
+#catDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
 #invDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
 #estDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
-#ordDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+#ordDlg .invcat,
+#catDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
 #invDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #estDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-#ordDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#ordDlg .acts,
+#catDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #invDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
 #estDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
-#ordDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
+#ordDlg .ipill,
+#catDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
 #invDlg .ipill.Approved,#invDlg .ipill.Paid,#invDlg .ipill.Converted,#invDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
 #estDlg .ipill.Approved,#estDlg .ipill.Paid,#estDlg .ipill.Converted,#estDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
-#ordDlg .ipill.Approved,#ordDlg .ipill.Paid,#ordDlg .ipill.Converted,#ordDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
+#ordDlg .ipill.Approved,#ordDlg .ipill.Paid,#ordDlg .ipill.Converted,#ordDlg .ipill.Completed,
+#catDlg .ipill.Approved,#catDlg .ipill.Paid,#catDlg .ipill.Converted,#catDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
 #invDlg .ipill.Sent,#invDlg .ipill.Partial,#invDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
 #estDlg .ipill.Sent,#estDlg .ipill.Partial,#estDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
-#ordDlg .ipill.Sent,#ordDlg .ipill.Partial,#ordDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
+#ordDlg .ipill.Sent,#ordDlg .ipill.Partial,#ordDlg .ipill.Scheduled,
+#catDlg .ipill.Sent,#catDlg .ipill.Partial,#catDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
 #invDlg .ipill.Declined,#invDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
 #estDlg .ipill.Declined,#estDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
-#ordDlg .ipill.Declined,#ordDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
+#ordDlg .ipill.Declined,#ordDlg .ipill.Unpaid,
+#catDlg .ipill.Declined,#catDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
 #invDlg td:first-child select[data-f="service_id"],#invDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
 #estDlg td:first-child select[data-f="service_id"],#estDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
-#ordDlg td:first-child select[data-f="service_id"],#ordDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
+#ordDlg td:first-child select[data-f="service_id"],#ordDlg td:first-child input[data-f="description"],
+#catDlg td:first-child select[data-f="service_id"],#catDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
 #estDlg input[type="checkbox"],#invDlg input[type="checkbox"]{width:auto;flex:none;padding:0}
 #cmmDlg>.f{max-width:1240px;display:block}
 #cmmDlg .det-h{margin-bottom:14px}
@@ -168,6 +191,7 @@
     <button class="navb" id="estBtn">✎ Estimates</button>
     <button class="navb" id="ordBtn">⚒ Job orders</button>
     <button class="navb" id="invBtn">▭ Invoices</button>
+    <button class="navb" id="catBtn">☰ Service Catalog</button>
     <button class="navb" id="cmmBtn">✉ Messages</button>
     <button class="navb" id="techBtn">☻ Manage technicians</button>
     <button class="navb" id="dlBtn">⭳ Download jobs</button>
@@ -284,6 +308,10 @@
 </dialog>
 
 <!-- ===== MESSAGES ===== -->
+<dialog id="catDlg" class="wide">
+  <div class="f"><div class="det-h"><h2>Service Catalog</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="catBody"></div></div>
+</dialog>
+
 <dialog id="cmmDlg" class="wide">
   <div class="f"><div class="det-h"><h2>Messages</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="cmmBody"></div></div>
 </dialog>
@@ -338,7 +366,7 @@
 <script>
 /* Manage technicians, Download jobs and Invoices as pages inside the main window; sidebar and dashboard stay untouched */
 (function(){
-  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"],["estDlg","estBtn"],["ordDlg","ordBtn"],["cmmDlg","cmmBtn"]], saved=[];
+  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"],["estDlg","estBtn"],["ordDlg","ordBtn"],["catDlg","catBtn"],["cmmDlg","cmmBtn"]], saved=[];
   var nav=function(){return document.querySelectorAll(".nav .navb[data-atab]");};
   var anyOpen=function(){return pairs.some(function(p){var d=document.getElementById(p[0]);return d&&d.open;});};
   function place(d){var s=document.querySelector(".side"),r=s?s.getBoundingClientRect():{right:0,bottom:0,width:0},stacked=r.width>innerWidth*0.9;
@@ -359,7 +387,7 @@
     });
   });
   document.addEventListener("click",function(e){
-    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,#estBtn,#ordBtn,#cmmBtn,[data-signout]")) return;
+    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,#estBtn,#ordBtn,#catBtn,#cmmBtn,[data-signout]")) return;
     pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) d.close();});
   },true);
   window.addEventListener("resize",function(){pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) place(d);});});
@@ -457,7 +485,7 @@ function render(){
  if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> The estimate and service tables are not in your database yet. Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page. Existing invoices below already work.</div>';
  if(S.panel&&S.panel.type==='pay') h+=panelHtml();
  if(S.panel&&S.panel.type==='inew') h+=newInvHtml();
- h+=invTab()+catalogHtml();
+ h+=invTab();
  b.innerHTML=h; paintDash(true);
 }
 function pill(s){return '<span class="ipill '+String(s).replace(/\s/g,'')+'">'+esc(s)+'</span>';}
@@ -512,7 +540,7 @@ function invCard(){
  return '<section class="invcard"><div class="invhead"><h3>Invoices</h3><button class="btn" data-act="openpage" data-id="inv">View all</button></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">Nothing outstanding.</td></tr>')+'</table></div></section>';
 }
 function dashHtml(){
- return '<div id="invDash"><section class="invcard"><div class="invhead"><h3>Estimates</h3><span class="iacts"><button class="btn" data-act="openpage" data-id="est">View all</button><button class="btn primary" data-act="enew">+ New estimate</button></span></div>'+estTable(8)+'</section><section class="invcard"><div class="invhead"><h3>Job orders</h3><span class="iacts"><span class="note">Next 10 upcoming. Change the technician here; times are on the Calendar.</span><button class="btn" data-act="openpage" data-id="ord">View all</button></span></div>'+jobTable()+'</section>'+invCard()+'</div>';
+ return '<div id="invDash"><section class="invcard"><div class="invhead"><h3>Estimates</h3><span class="iacts"><button class="btn" data-act="openpage" data-id="est">View all</button><button class="btn primary" data-act="enew">+ New estimate</button></span></div>'+estTable(8)+'</section><section class="invcard"><div class="invhead"><h3>Job orders</h3><span class="iacts"><span class="note">Next 10 upcoming. Change the technician here; times are on the Calendar.</span><button class="btn" data-act="openpage" data-id="ord">View all</button></span></div>'+jobTable()+'</section>'+invCard()+catCard()+'</div>';
 }
 var loading=false;
 function paintDash(force){
@@ -529,6 +557,7 @@ function paintPages(force){
   else e.innerHTML='<div class="invhead"><span class="note">All estimates. Create one, send it to the customer, and when it is approved send it to job orders.</span><button class="btn primary" data-act="enew">+ New estimate</button></div>'+estTable(500);
  }
  if(j&&!(document.activeElement&&document.activeElement.id==='oq'&&j.contains(document.activeElement))) j.innerHTML=ordPage();
+ var cb=$('#catBody'); if(cb&&!(document.activeElement&&cb.contains(document.activeElement)&&/^(INPUT|SELECT)$/.test(document.activeElement.tagName))) cb.innerHTML=catPage();
 }
 function curPage(){return ($('#estDlg')&&$('#estDlg').open)?'est':($('#ordDlg')&&$('#ordDlg').open)?'ord':null;}
 function finish(){}
@@ -610,6 +639,24 @@ async function createInvoice(){
  var ii=await sb.from('gl_invoice_items').insert(lines.map(function(l){return {job_id:jr.data.id,description:String(l.description).trim(),qty:num(l.qty)||1,unit_price:num(l.unit_price),added_by:(S.me&&S.me.id)||null};}));
  if(ii.error) toast('Lines not saved: '+ii.error.message); else toast('Invoice created');
  S.panel=null; S.__force=true; await reload();
+}
+function isAdm(){return !!(S.me&&S.me.role==='admin');}
+function catItems(){return S.services.length?S.services.filter(function(x){return x.active!==false;}).map(function(x){return {name:x.name,unit:x.unit,price:x.unit_price};}):STARTER.map(function(x){return {name:x[0],unit:x[3],price:x[4]};});}
+function readCat(){
+ var it=S.services.length?S.services.filter(function(x){return x.active!==false;}):null;
+ if(!it) return starterTable();
+ var last='';
+ return '<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Category</th><th>Unit</th><th>Price</th></tr>'+it.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td>'+esc(x.category)+'</td><td>'+esc(x.unit)+'</td><td>'+(num(x.unit_price)?money(x.unit_price):'Quote')+'</td></tr>';}).join('')+'</table></div>';
+}
+function catPage(){
+ if(!isAdm()) return '<p class="note">View only. Only an admin can edit prices or add services.</p>'+readCat();
+ var h='';
+ if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page to edit prices and add services. Until then the starter list below is read-only.</div>';
+ return h+catalogHtml();
+}
+function catCard(){
+ var it=catItems(), rows=it.slice(0,6).map(function(i){return '<tr><td>'+esc(i.name)+'</td><td>'+esc(i.unit)+'</td><td>'+(num(i.price)?money(i.price):'Quote')+'</td></tr>';}).join('');
+ return '<section class="invcard"><div class="invhead"><h3>Service Catalog</h3><span class="iacts"><span class="note">'+it.length+' services</span><button class="btn" data-act="openpage" data-id="cat">View all</button>'+(isAdm()?'<button class="btn primary" data-act="openpage" data-id="cat">+ Add service</button>':'')+'</span></div><div class="scroll"><table class="tbl"><tr><th>Service</th><th>Unit</th><th>Price</th></tr>'+rows+'</table></div></section>';
 }
 function catalogHtml(){
  var cats=uniq(S.services.map(function(s){return s.category;}));
@@ -753,6 +800,7 @@ async function seed(){ if(seedBusy) return; seedBusy=true;
 var body=$('#invBody');
 var onClick=async function(ev){
  var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act, id=b.dataset.id;
+ if((a==='cadd'||a==='cact'||a==='cseed')&&!isAdm()) return toast('Only an admin can change the service catalog.');
  if(a==='enew'){openEditor(null);}
  else if(a==='eedit'){openEditor(S.estimates.find(function(x){return x.id===id;}));}
  else if(a==='ecancel'){S.draft=null;S.panel=null;finish();render();}
@@ -783,7 +831,7 @@ var onChange=async function(ev){
  if(t.dataset.cv!==undefined||t.id==='cvDate'){updAvail();return;}
  if(t.dataset.act==='ifilter'){S.filter=t.value;render();return;}
  if(t.dataset.act==='jtech'){var r=await sb.from('gl_jobs').update({tech_id:t.value||null}).eq('id',t.dataset.id); if(r.error) toast(r.error.message); else toast('Technician updated'); await reload(); return;}
- if(t.dataset.cat){var v=t.type==='number'?num(t.value):t.value.trim(); if(t.dataset.f==='name'&&!v) return reload(); var p={}; p[t.dataset.f]=v; var r4=await sb.from('gl_services').update(p).eq('id',t.dataset.cat); if(r4.error) toast(r4.error.message); else toast('Saved'); await reload(); return;}
+ if(t.dataset.cat){if(!isAdm()){toast('Only an admin can edit prices.');return reload();} var v=t.type==='number'?num(t.value):t.value.trim(); if(t.dataset.f==='name'&&!v) return reload(); var p={}; p[t.dataset.f]=v; var r4=await sb.from('gl_services').update(p).eq('id',t.dataset.cat); if(r4.error) toast(r4.error.message); else toast('Saved'); await reload(); return;}
  if(!S.draft) return;
  if(t.id==='edCust'){if(t.value==='__new'){S.draft.newCust=true;S.draft.customer_id='';}else{S.draft.newCust=false;S.draft.customer_id=t.value;} render(); return;}
  if(t.dataset.i!==undefined){var l=S.draft.lines[+t.dataset.i], f=t.dataset.f;
@@ -791,8 +839,8 @@ var onChange=async function(ev){
   l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
 };
 body.addEventListener('click',onClick); body.addEventListener('change',onChange);
-document.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody')) onClick(ev);});
-document.addEventListener('change',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody')) onChange(ev);});
+document.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody,#catBody')) onClick(ev);});
+document.addEventListener('change',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody,#catBody')) onChange(ev);});
 body.addEventListener('input',function(ev){
  var t=ev.target; if(!S.draft) return;
  if(t.id==='edNotes') S.draft.notes=t.value;
@@ -850,7 +898,7 @@ if(ordB){
  });
 }
 d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
-['est','ord'].forEach(function(k){var b2=$('#'+k+'Btn'); if(b2) b2.addEventListener('click',function(){S.draft=null;S.panel=null;$('#'+k+'Dlg').showModal();render();reload().catch(function(){});});});
+['est','ord','cat'].forEach(function(k){var b2=$('#'+k+'Btn'); if(b2) b2.addEventListener('click',function(){S.draft=null;S.panel=null;$('#'+k+'Dlg').showModal();render();reload().catch(function(){});});});
 var dvEl=$('#dashView'); if(dvEl) new MutationObserver(onDashMut).observe(dvEl,{childList:true}); setTimeout(onDashMut,1500);
 var btn=$('#invBtn'); if(btn) btn.addEventListener('click',function(){S.draft=null;S.panel=null;d.showModal();body.innerHTML='<p class="note">Loading…</p>';reload().catch(function(e){body.innerHTML='<p class="err">Could not load: '+esc(e.message)+'</p>';});});
 })();
