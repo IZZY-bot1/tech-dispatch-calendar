@@ -11,8 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style id="techPage">
 /* Manage technicians, Download jobs and Invoices open inside the main window (sidebar stays) */
-#techDlg,#dlDlg,#invDlg,#estDlg,#ordDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
-#techDlg>.f,#dlDlg>.f,#invDlg>.f,#estDlg>.f,#ordDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
+#techDlg,#dlDlg,#invDlg,#estDlg,#ordDlg,#cmmDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
+#techDlg>.f,#dlDlg>.f,#invDlg>.f,#estDlg>.f,#ordDlg>.f,#cmmDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
 #invDlg>.f{max-width:1240px;display:block}
 #estDlg>.f{max-width:1240px;display:block}
 #ordDlg>.f{max-width:1240px;display:block}
@@ -86,6 +86,38 @@
 #estDlg td:first-child select[data-f="service_id"],#estDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
 #ordDlg td:first-child select[data-f="service_id"],#ordDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
 #estDlg input[type="checkbox"],#invDlg input[type="checkbox"]{width:auto;flex:none;padding:0}
+#cmmDlg>.f{max-width:1240px;display:block}
+#cmmDlg .det-h{margin-bottom:14px}
+.cmm{display:grid;grid-template-columns:300px 1fr;gap:14px;min-height:60vh}
+.cmmlist{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:4px;max-height:78vh;overflow:auto}
+.cmmlist h4{margin:10px 6px 4px;font:600 12px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cmmrow{display:flex;align-items:center;gap:8px;text-align:left;width:100%;background:transparent;color:var(--fg);border:0;border-radius:8px;padding:8px;cursor:pointer;font:inherit}
+.cmmrow:hover,.cmmrow.on{background:var(--today)}
+.cmmrow .nm{flex:1;min-width:0;display:grid}
+.cmmrow small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmmthread{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:60vh;max-height:78vh;min-width:0}
+.cmmhead{padding:12px 14px;border-bottom:1px solid var(--line)}
+.cmmempty{padding:24px}
+.cmmmsgs{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
+.cmmb{max-width:72%;padding:8px 10px;border-radius:10px;background:var(--bg);border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere}
+.cmmb.me{align-self:flex-end;background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.cmmb small{display:block;opacity:.75;margin-top:3px;font-size:11px}
+.cmmcomp{border-top:1px solid var(--line);padding:12px 14px;display:grid;gap:8px}
+.cmmcomp textarea,.cmm input,.cmm select,.cmmtech select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:100%;max-width:100%}
+.cmmcomp label,.cmmtech label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.cmmrow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmmtpls{display:flex;gap:6px;flex-wrap:wrap}
+.cmmacts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cmmtech{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px;display:grid;gap:10px}
+.cmmtech h3{margin:0;font:700 16px var(--display)}
+.cmmtech .cmmmsgs{border:1px solid var(--line);border-radius:8px}
+.cmmtech .cmmcomp{border-top:0;padding:0}
+#cmmDash{grid-column:1/-1;display:grid;gap:14px}
+#cmmDash .invcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+#cmmDash h3{margin:0;font:700 16px var(--display)}
+#cmmDash .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px}
+#cmmDash .cmmdashlist{display:grid;gap:2px}
+@media (max-width:800px){.cmm{grid-template-columns:1fr}.cmmrow2{grid-template-columns:1fr}}
 #invDash{grid-column:1/-1;display:grid;gap:14px}
 #invDash .invcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 #invDash h3{margin:0;font:700 16px var(--display)}
@@ -101,6 +133,7 @@
 #invDash .ipill.Sent,#invDash .ipill.Partial,#invDash .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
 #invDash .ipill.Declined,#invDash .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
 @media (max-width:700px){#invDlg .row{grid-template-columns:1fr}}
+.invfilt{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}.invfilt input[type=search]{flex:1 1 220px;min-width:180px}.invfilt select,.invfilt input[type=date]{width:auto;flex:0 1 auto}.invfilt .dl{display:flex;align-items:center;gap:6px;font-size:13px}.invmore{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}.nvl td:nth-child(2),.nvl td:nth-child(3){width:96px}.nvl .nvt{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -135,6 +168,7 @@
     <button class="navb" id="estBtn">✎ Estimates</button>
     <button class="navb" id="ordBtn">⚒ Job orders</button>
     <button class="navb" id="invBtn">▭ Invoices</button>
+    <button class="navb" id="cmmBtn">✉ Messages</button>
     <button class="navb" id="techBtn">☻ Manage technicians</button>
     <button class="navb" id="dlBtn">⭳ Download jobs</button>
   </nav>
@@ -249,6 +283,11 @@
   <div class="f"><div class="det-h"><h2>Job orders</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="ordBody"></div></div>
 </dialog>
 
+<!-- ===== MESSAGES ===== -->
+<dialog id="cmmDlg" class="wide">
+  <div class="f"><div class="det-h"><h2>Messages</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="cmmBody"></div></div>
+</dialog>
+
 <!-- ===== TECHNICIANS ===== -->
 <dialog id="techDlg" class="wide">
   <div class="f">
@@ -299,7 +338,7 @@
 <script>
 /* Manage technicians, Download jobs and Invoices as pages inside the main window; sidebar and dashboard stay untouched */
 (function(){
-  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"],["estDlg","estBtn"],["ordDlg","ordBtn"]], saved=[];
+  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"],["estDlg","estBtn"],["ordDlg","ordBtn"],["cmmDlg","cmmBtn"]], saved=[];
   var nav=function(){return document.querySelectorAll(".nav .navb[data-atab]");};
   var anyOpen=function(){return pairs.some(function(p){var d=document.getElementById(p[0]);return d&&d.open;});};
   function place(d){var s=document.querySelector(".side"),r=s?s.getBoundingClientRect():{right:0,bottom:0,width:0},stacked=r.width>innerWidth*0.9;
@@ -320,7 +359,7 @@
     });
   });
   document.addEventListener("click",function(e){
-    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,#estBtn,#ordBtn,[data-signout]")) return;
+    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,#estBtn,#ordBtn,#cmmBtn,[data-signout]")) return;
     pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) d.close();});
   },true);
   window.addEventListener("resize",function(){pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) place(d);});});
@@ -335,7 +374,7 @@ function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catc
 var sb=supabase.createClient(C.url,C.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'gl-inv'},global:{fetch:function(u,o){var s=stored(),h=new Headers((o&&o.headers)||{}); if(s&&s.access_token) h.set('Authorization','Bearer '+s.access_token); return fetch(u,Object.assign({},o,{headers:h}));}}});
 var $=function(s,r){return (r||document).querySelector(s);};
 var d=$('#invDlg'); if(!d||d.__inv) return; d.__inv=1;
-var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:''};
+var S={customers:[],staff:[],jobs:[],items:[],services:[],estimates:[],eitems:[],me:null,tab:'est',setup:true,draft:null,panel:null,filter:'',ifq:'',ist:'',ipay:'',itech:'',idate:'',idto:'',ilim:10,oq:'',ost:'',osvc:'',ocust:'',odate:'',odto:'',olim:10};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
 var num=function(n){return +n||0;};
 var money=function(n){return '$'+num(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
@@ -411,9 +450,13 @@ function printDoc(doc){var p=$('#printArea'); if(!p){toast('Print area missing')
 /* ---------- render ---------- */
 function render(){
  var b=$('#invBody'); if(!b) return;
+ var ae=document.activeElement;
+ if(!S.__force&&((ae&&b.contains(ae)&&(ae.id==='ifq'||ae.dataset.nl!==undefined))||(S.panel&&S.panel.type==='inew'&&b.querySelector('#nvCust')))){paintDash(true);return;}
+ S.__force=false;
  var h='';
  if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> The estimate and service tables are not in your database yet. Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page. Existing invoices below already work.</div>';
  if(S.panel&&S.panel.type==='pay') h+=panelHtml();
+ if(S.panel&&S.panel.type==='inew') h+=newInvHtml();
  h+=invTab()+catalogHtml();
  b.innerHTML=h; paintDash(true);
 }
@@ -428,6 +471,33 @@ function estTable(limit){
   return '<tr><td>'+estNo(e)+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(names)+'</td><td>'+money(eTotal(e.id))+'</td><td>'+pill(e.status)+'</td><td class="iacts">'+a+'</td></tr>';}).join('');
  return '<div class="scroll"><table class="tbl"><tr><th>#</th><th>Customer</th><th>Technician</th><th>Total</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(S.setup?'No estimates yet. Create one, send it, and convert it to job orders when approved.':'Estimates turn on after the one-time database setup (see the Invoices page).')+'</td></tr>')+'</table></div>';
 }
+function ordHasF(){return !!(S.oq||S.ost||S.osvc||S.ocust||S.odate||S.odto);}
+function ordFiltered(){
+ var q=S.oq.trim().toLowerCase();
+ return S.jobs.filter(function(j){
+  if(S.ost&&j.status!==S.ost) return false;
+  if(S.osvc&&j.svc!==S.osvc) return false;
+  if(S.ocust&&j.customer_id!==S.ocust) return false;
+  if(S.odate&&String(j.date)<S.odate) return false;
+  if(S.odto&&String(j.date)>S.odto) return false;
+  if(q){var c=cust(j.customer_id), t=tech(j.tech_id); var hay=[c.name,c.address,c.phone,c.email,j.svc,j.notes,t.name,j.status].join(' ').toLowerCase(); if(hay.indexOf(q)<0) return false;}
+  return true;
+ }).sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+}
+function ordPage(){
+ var o=function(v,l,cur){return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+l+'</option>';};
+ var all=ordFiltered(), list=all.slice(0,S.olim);
+ var bar='<div class="invfilt"><input id="oq" type="search" placeholder="Search customer, address, service, technician" value="'+esc(S.oq)+'">'
+ +'<select data-of="ocust">'+o('','All customers',S.ocust)+S.customers.map(function(c){return o(c.id,esc(c.name),S.ocust);}).join('')+'</select>'
+ +'<select data-of="ost">'+o('','All statuses',S.ost)+['Scheduled','In progress','Completed','Pending approval','Canceled'].map(function(x){return o(x,x,S.ost);}).join('')+'</select>'
+ +'<select data-of="osvc">'+o('','All services',S.osvc)+JOBTYPES.map(function(x){return o(esc(x),esc(x),S.osvc);}).join('')+'</select>'
+ +'<label class="dl">From <input type="date" data-of="odate" value="'+esc(S.odate)+'"></label><label class="dl">To <input type="date" data-of="odto" value="'+esc(S.odto)+'"></label>'
+ +(ordHasF()?'<button class="btn sm" data-act="oclear">Clear</button>':'')+'</div>';
+ var rows=list.map(function(j){var c=cust(j.customer_id);
+  return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'<br><span class="note">'+esc(c.address||'No address on file')+'</span></td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
+ var more='<div class="invmore"><span class="note">Showing '+list.length+' of '+all.length+'</span>'+(all.length>list.length?'<button class="btn sm" data-act="omore">Show 10 more</button><button class="btn sm" data-act="oall">Show all</button>':'')+(S.olim>10&&list.length>10?'<button class="btn sm" data-act="ofewer">Show fewer</button>':'')+'</div>';
+ return '<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+bar+'<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(ordHasF()?'No job orders match your search or filters.':'No job orders yet.')+'</td></tr>')+'</table></div>'+(all.length?more:'');
+}
 function jobTable(all){
  var t0=iso(), list=all?S.jobs.slice(0,100):S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
  var rows=list.map(function(j){var c=cust(j.customer_id);
@@ -438,7 +508,7 @@ function invCard(){
  var jobs=S.jobs.filter(function(j){return j.status!=='Canceled'&&itemsOf(j.id).length;});
  var billed=0,paid=0; jobs.forEach(function(j){var t=jobTotal(j); billed+=t; paid+=Math.min(num(j.amount_paid),t);});
  var due=jobs.filter(function(j){return jobTotal(j)-num(j.amount_paid)>0.004;}).slice(0,5);
- var rows=due.map(function(j){var c=cust(j.customer_id);return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+money(Math.max(0,jobTotal(j)-num(j.amount_paid)))+'</td><td>'+pill(j.pay_status||'Unpaid')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'">Send invoice</button></td></tr>';}).join('');
+ var rows=due.map(function(j){var c=cust(j.customer_id);return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+money(Math.max(0,jobTotal(j)-num(j.amount_paid)))+'</td><td>'+pill(j.pay_status||'Unpaid')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Send invoice</button></td></tr>';}).join('');
  return '<section class="invcard"><div class="invhead"><h3>Invoices</h3><button class="btn" data-act="openpage" data-id="inv">View all</button></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">Nothing outstanding.</td></tr>')+'</table></div></section>';
 }
 function dashHtml(){
@@ -458,7 +528,7 @@ function paintPages(force){
   else if(S.panel&&S.panel.type==='cv'){ if(force||!e.querySelector('#cvDate')){ e.innerHTML=panelHtml(); updAvail(); } }
   else e.innerHTML='<div class="invhead"><span class="note">All estimates. Create one, send it to the customer, and when it is approved send it to job orders.</span><button class="btn primary" data-act="enew">+ New estimate</button></div>'+estTable(500);
  }
- if(j) j.innerHTML='<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+jobTable(true);
+ if(j&&!(document.activeElement&&document.activeElement.id==='oq'&&j.contains(document.activeElement))) j.innerHTML=ordPage();
 }
 function curPage(){return ($('#estDlg')&&$('#estDlg').open)?'est':($('#ordDlg')&&$('#ordDlg').open)?'ord':null;}
 function finish(){}
@@ -469,12 +539,77 @@ function onDashMut(){
  if(!loading&&Date.now()-(S.t||0)>12000){loading=true; load().then(function(){S.t=Date.now(); paintDash();}).catch(function(){S.t=Date.now();}).then(function(){loading=false;});}
 }
 function invTab(){
- var jobs=S.jobs.filter(function(j){return j.status!=='Canceled'&&itemsOf(j.id).length&&(!S.filter||j.customer_id===S.filter);});
- var billed=0,paid=0; jobs.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
+ var all=invFiltered(), jobs=all.slice(0,S.ilim);
+ var billed=0,paid=0; all.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
  var opts='<option value="">All customers</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===S.filter?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
  var rows=jobs.map(function(j){var c=cust(j.customer_id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
-  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'">Send invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
- return '<div class="invhead"><h3>Invoices</h3><select data-act="ifilter">'+opts+'</select></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">No invoices yet. Invoices are created when a job has billed services.</td></tr>')+'</table></div>';
+  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Send invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
+ return '<div class="invhead"><h3>Invoices</h3><span class="note">Send is available once a job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+moreBar(all,jobs);
+}
+function hasF(){return !!(S.ifq||S.ist||S.ipay||S.itech||S.idate||S.idto||S.filter);}
+function invFiltered(){
+ var q=S.ifq.trim().toLowerCase();
+ return S.jobs.filter(function(j){
+  if(j.status==='Canceled'||!itemsOf(j.id).length) return false;
+  if(S.filter&&j.customer_id!==S.filter) return false;
+  if(S.ist&&(j.pay_status||'Unpaid')!==S.ist) return false;
+  if(S.ipay==='sent'&&!j.invoice_sent_at) return false;
+  if(S.ipay==='unsent'&&j.invoice_sent_at) return false;
+  if(S.ipay==='ready'&&(j.status!=='Completed'||j.invoice_sent_at)) return false;
+  if(S.itech==='_none'&&j.tech_id) return false;
+  if(S.itech&&S.itech!=='_none'&&j.tech_id!==S.itech) return false;
+  if(S.idate&&String(j.date)<S.idate) return false;
+  if(S.idto&&String(j.date)>S.idto) return false;
+  if(q){var c=cust(j.customer_id), t=tech(j.tech_id); var hay=[invNo(j),c.name,c.phone,c.email,j.svc,j.notes,t.name,j.status,itemsOf(j.id).map(function(i){return i.description;}).join(' ')].join(' ').toLowerCase(); if(hay.indexOf(q)<0) return false;}
+  return true;
+ }).sort(function(a,b){return String(b.date).localeCompare(String(a.date));});
+}
+function filterBar(){
+ var o=function(v,l,cur){return '<option value="'+v+'"'+(cur===v?' selected':'')+'>'+l+'</option>';};
+ return '<div class="invfilt"><input id="ifq" type="search" placeholder="Search invoice #, customer, service, technician" value="'+esc(S.ifq)+'">'
+ +'<select data-if="ist">'+o('','All payment status',S.ist)+['Unpaid','Partial','Paid','Refunded'].map(function(x){return o(x,x,S.ist);}).join('')+'</select>'
+ +'<select data-if="ipay">'+o('','Any sent state',S.ipay)+o('ready','Ready to send',S.ipay)+o('sent','Sent',S.ipay)+o('unsent','Not sent',S.ipay)+'</select>'
+ +'<select data-if="itech">'+o('','All technicians',S.itech)+o('_none','Unassigned',S.itech)+S.staff.filter(function(x){return x.active!==false;}).map(function(x){return o(x.id,esc(x.name),S.itech);}).join('')+'</select>'
+ +'<label class="dl">From <input type="date" data-if="idate" value="'+esc(S.idate)+'"></label><label class="dl">To <input type="date" data-if="idto" value="'+esc(S.idto)+'"></label>'
+ +(hasF()?'<button class="btn sm" data-act="iclear">Clear</button>':'')+'</div>';
+}
+function moreBar(all,shown){
+ if(!all.length) return '';
+ return '<div class="invmore"><span class="note">Showing '+shown.length+' of '+all.length+'</span>'
+ +(all.length>shown.length?'<button class="btn sm" data-act="imore">Show 10 more</button><button class="btn sm" data-act="iall">Show all</button>':'')
+ +(S.ilim>10&&shown.length>10?'<button class="btn sm" data-act="ifewer">Show fewer</button>':'')+'</div>';
+}
+function nvLine(){return {description:'',qty:1,unit_price:0};}
+function nvSum(){return S.panel.lines.reduce(function(a,l){return a+num(l.qty)*num(l.unit_price);},0);}
+function newInvHtml(){
+ var P=S.panel;
+ var cs='<option value="">Select customer</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===P.customer_id?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
+ var ts='<option value="">Unassigned</option>'+S.staff.filter(function(x){return x.active!==false;}).map(function(x){return '<option value="'+x.id+'"'+(x.id===P.tech_id?' selected':'')+'>'+esc(x.name)+'</option>';}).join('');
+ var ty=JOBTYPES.map(function(x){return '<option'+(x===P.svc?' selected':'')+'>'+esc(x)+'</option>';}).join('');
+ var dl='<datalist id="nvSvc">'+S.services.filter(function(x){return x.active!==false;}).map(function(x){return '<option value="'+esc(x.name)+'">'+esc(money(x.unit_price))+'</option>';}).join('')+'</datalist>';
+ var rows=P.lines.map(function(l,i){return '<tr><td><input data-nl="'+i+'" data-f="description" list="nvSvc" placeholder="Service / description" value="'+esc(l.description)+'"></td><td><input data-nl="'+i+'" data-f="qty" type="number" min="0" step="0.25" value="'+num(l.qty)+'"></td><td><input data-nl="'+i+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(l.unit_price)+'"></td><td class="nvt">'+money(num(l.qty)*num(l.unit_price))+'</td><td><button class="btn sm" data-act="inrem" data-id="'+i+'" title="Remove line">&times;</button></td></tr>';}).join('');
+ return '<div class="invpanel"><h3>New invoice</h3><div class="row"><label>Customer<select id="nvCust">'+cs+'</select></label><label>Technician<select id="nvTech">'+ts+'</select></label></div><div class="row"><label>Job type<select id="nvType">'+ty+'</select></label><label>Service date<input id="nvDate" type="date" value="'+esc(P.date)+'"></label></div>'
+ +dl+'<div class="scroll"><table class="tbl nvl"><tr><th>Service</th><th>Qty</th><th>Price ($)</th><th>Total</th><th></th></tr>'+rows+'</table></div>'
+ +'<div class="invmore"><button class="btn sm" data-act="inadd">+ Add service line</button><span>Total <b id="nvTotal">'+money(nvSum())+'</b></span></div>'
+ +'<div class="invmore"><button class="btn primary" data-act="increate">Create invoice</button><button class="btn" data-act="inclose">Cancel</button><span class="note">Creates the job and its billed services. It can be sent once the job is Completed.</span></div></div>';
+}
+function readNv(){
+ var P=S.panel; if(!P||P.type!=='inew') return;
+ var g=function(id){var x=$('#'+id); return x?x.value:'';};
+ if($('#nvCust')){P.customer_id=g('nvCust');P.tech_id=g('nvTech');P.svc=g('nvType')||P.svc;P.date=g('nvDate');}
+ P.lines.forEach(function(l,i){['description','qty','unit_price'].forEach(function(f){var x=$('[data-nl="'+i+'"][data-f="'+f+'"]'); if(x) l[f]=(f==='description')?x.value:num(x.value);});});
+}
+async function createInvoice(){
+ readNv(); var P=S.panel;
+ if(!P.customer_id) return toast('Select a customer');
+ if(!P.date) return toast('Pick a service date');
+ var lines=P.lines.filter(function(l){return String(l.description).trim();});
+ if(!lines.length) return toast('Add at least one service line');
+ var jr=await sb.from('gl_jobs').insert({customer_id:P.customer_id,svc:P.svc,notes:'Invoice created in portal',tech_id:P.tech_id||null,status:'Scheduled',date:P.date,start_time:'09:00',dur:1}).select().single();
+ if(jr.error) return toast('Invoice not created: '+jr.error.message);
+ var ii=await sb.from('gl_invoice_items').insert(lines.map(function(l){return {job_id:jr.data.id,description:String(l.description).trim(),qty:num(l.qty)||1,unit_price:num(l.unit_price),added_by:(S.me&&S.me.id)||null};}));
+ if(ii.error) toast('Lines not saved: '+ii.error.message); else toast('Invoice created');
+ S.panel=null; S.__force=true; await reload();
 }
 function catalogHtml(){
  var cats=uniq(S.services.map(function(s){return s.category;}));
@@ -602,7 +737,7 @@ async function savePay(jid,full){
  S.panel=null; await reload(); toast('Payment saved');
 }
 async function sendInvoice(jid){
- var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return; var doc=invDoc(j);
+ var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return; if(j.status!=='Completed') return toast('Invoices can be sent once the job is Completed.'); var doc=invDoc(j);
  if(await sendDoc(doc)){var now=new Date().toISOString();
   await sb.from('gl_jobs').update({invoice_sent_at:now}).eq('id',jid);
   if(S.me) await sb.from('gl_messages').insert({job_id:jid,customer_id:j.customer_id,sender_id:S.me.id,channel:'email',body:doc.text});
@@ -664,10 +799,225 @@ body.addEventListener('input',function(ev){
  else if(t.dataset.nc) S.draft.nc[t.dataset.nc]=t.value;
  else if(t.dataset.i!==undefined&&t.tagName==='INPUT'){var l=S.draft.lines[+t.dataset.i], f=t.dataset.f; l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
 });
+var nvBody=$('#invBody');
+if(nvBody){
+ var redo=function(){S.__force=true;render();};
+ nvBody.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-act]'); if(!b) return; var a=b.dataset.act;
+  if(a==='inew'){S.draft=null;S.panel={type:'inew',customer_id:S.filter||'',tech_id:'',svc:JOBTYPES[0]||'Other',date:iso(),lines:[nvLine()]};redo();nvBody.scrollTop=0;d.scrollTop=0;}
+  else if(a==='inclose'){S.panel=null;redo();}
+  else if(a==='inadd'){readNv();S.panel.lines.push(nvLine());redo();}
+  else if(a==='inrem'){readNv();S.panel.lines.splice(+b.dataset.id,1);if(!S.panel.lines.length)S.panel.lines.push(nvLine());redo();}
+  else if(a==='increate'){createInvoice();}
+  else if(a==='imore'){S.ilim+=10;redo();}
+  else if(a==='iall'){S.ilim=100000;redo();}
+  else if(a==='ifewer'){S.ilim=10;redo();}
+  else if(a==='iclear'){S.ifq='';S.ist='';S.ipay='';S.itech='';S.idate='';S.idto='';S.filter='';S.ilim=10;redo();}
+ });
+ nvBody.addEventListener('input',function(ev){
+  var t=ev.target;
+  if(t.id==='ifq'){var pos=t.selectionStart; S.ifq=t.value; S.ilim=10; redo(); var n=$('#ifq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}} return;}
+  if(t.dataset.nl!==undefined&&S.panel&&S.panel.type==='inew'){
+   readNv();
+   var i=+t.dataset.nl, l=S.panel.lines[i];
+   if(t.dataset.f==='description'){var m=S.services.find(function(x){return x.name===t.value;}); if(m&&!num(l.unit_price)){l.unit_price=num(m.unit_price); var p=$('[data-nl="'+i+'"][data-f="unit_price"]'); if(p) p.value=l.unit_price;}}
+   var row=t.closest('tr'); if(row){var c=row.querySelector('.nvt'); if(c) c.textContent=money(num(l.qty)*num(l.unit_price));}
+   var tt=$('#nvTotal'); if(tt) tt.textContent=money(nvSum());
+  }
+ });
+ nvBody.addEventListener('change',function(ev){
+  var t=ev.target;
+  if(t.dataset.if){S[t.dataset.if]=t.value; S.ilim=10; redo();}
+  else if(t.id==='nvCust'||t.id==='nvTech'||t.id==='nvType'||t.id==='nvDate'){readNv();}
+ });
+}
+var ordB=$('#ordBody');
+if(ordB){
+ var oredo=function(){ordB.innerHTML=ordPage();};
+ ordB.addEventListener('click',function(ev){
+  var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act;
+  if(a==='omore'){S.olim+=10;oredo();}
+  else if(a==='oall'){S.olim=100000;oredo();}
+  else if(a==='ofewer'){S.olim=10;oredo();}
+  else if(a==='oclear'){S.oq='';S.ost='';S.osvc='';S.ocust='';S.odate='';S.odto='';S.olim=10;oredo();}
+ });
+ ordB.addEventListener('input',function(ev){
+  var t=ev.target; if(t.id!=='oq') return;
+  var pos=t.selectionStart; S.oq=t.value; S.olim=10; oredo(); var n=$('#oq'); if(n){n.focus(); try{n.setSelectionRange(pos,pos);}catch(e){}}
+ });
+ ordB.addEventListener('change',function(ev){
+  var t=ev.target; if(t.dataset.of){S[t.dataset.of]=t.value; S.olim=10; oredo();}
+ });
+}
 d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
 ['est','ord'].forEach(function(k){var b2=$('#'+k+'Btn'); if(b2) b2.addEventListener('click',function(){S.draft=null;S.panel=null;$('#'+k+'Dlg').showModal();render();reload().catch(function(){});});});
 var dvEl=$('#dashView'); if(dvEl) new MutationObserver(onDashMut).observe(dvEl,{childList:true}); setTimeout(onDashMut,1500);
 var btn=$('#invBtn'); if(btn) btn.addEventListener('click',function(){S.draft=null;S.panel=null;d.showModal();body.innerHTML='<p class="note">Loading…</p>';reload().catch(function(e){body.innerHTML='<p class="err">Could not load: '+esc(e.message)+'</p>';});});
+})();
+</script>
+<script>
+/* Messages: admin, technicians and customers */
+(function commModule(){
+var C=window.GL_CONFIG, KEY='sb-'+new URL(C.url).host.split('.')[0]+'-auth-token';
+function stored(){try{return JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){return null;}}
+var sb=supabase.createClient(C.url,C.key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:'gl-comm'},global:{fetch:function(u,o){var s=stored(),h=new Headers((o&&o.headers)||{}); if(s&&s.access_token) h.set('Authorization','Bearer '+s.access_token); return fetch(u,Object.assign({},o,{headers:h}));}}});
+var $=function(s,r){return (r||document).querySelector(s);};
+var dlg=$('#cmmDlg'); if(!dlg||dlg.__cmm) return; dlg.__cmm=1;
+var D={staff:[],customers:[],jobs:[],chats:[],msgs:[],me:null,sel:null,q:'',t:0,loading:false,tc:'',draft:{}};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
+var tel=function(p){return String(p||'').replace(/\D/g,'');};
+var toast=function(m){var t=document.getElementById('toast'); if(!t) return; t.textContent=m; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(function(){t.hidden=true;},3600);};
+var isAdmin=function(){return !!(D.me&&D.me.role==='admin');};
+var staff=function(id){return D.staff.find(function(s){return s.id===id;});};
+var cust=function(id){return D.customers.find(function(c){return c.id===id;})||{};};
+var when=function(ts){var d=new Date(ts),n=new Date(),tm=d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}); return d.toDateString()===n.toDateString()?tm:d.toLocaleDateString([],{month:'short',day:'numeric'})+' '+tm;};
+var longDate=function(s){if(!s) return ''; var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});};
+var fmtT=function(t){var p=String(t||'').split(':'),h=+p[0]||0,m=+p[1]||0; return (h%12||12)+':'+String(m).padStart(2,'0')+(h>=12?' PM':' AM');};
+var keyOf=function(sel){return sel?sel.type+':'+sel.id:'';};
+
+async function load(){
+ var s0=stored(), uid=s0&&s0.user&&s0.user.id; if(!uid) return false;
+ var r=await Promise.all([sb.from('gl_staff').select('*').order('name'),sb.from('gl_customers').select('*').order('name'),sb.from('gl_jobs').select('*').order('date',{ascending:false}),sb.from('gl_chat').select('*').order('created_at').limit(1000),sb.from('gl_messages').select('*').order('created_at').limit(1000)]);
+ D.staff=r[0].data||[]; D.customers=r[1].data||[]; D.jobs=r[2].data||[]; D.chats=r[3].data||[]; D.msgs=r[4].data||[];
+ D.me=D.staff.find(function(x){return x.user_id===uid;})||null; D.t=Date.now(); return true;
+}
+var unreadFrom=function(id){return D.chats.filter(function(c){return D.me&&c.from_staff===id&&c.to_staff===D.me.id&&!c.read_at;}).length;};
+var unreadAll=function(){return D.chats.filter(function(c){return D.me&&c.to_staff===D.me.id&&!c.read_at;}).length;};
+var staffChat=function(id){return D.chats.filter(function(c){return D.me&&((c.from_staff===D.me.id&&c.to_staff===id)||(c.from_staff===id&&c.to_staff===D.me.id));});};
+var custMsgs=function(id){return D.msgs.filter(function(m){return m.customer_id===id;});};
+var last=function(a){return a.length?a[a.length-1]:null;};
+function badge(){var b=$('#cmmBtn'); if(!b) return; var n=unreadAll(); b.innerHTML='✉ Messages'+(n?' <span class="badge">'+n+'</span>':'');}
+
+/* ---------- threads ---------- */
+function threads(){
+ var out=[];
+ if(!D.me) return out;
+ D.staff.filter(function(s){return s.active&&s.id!==D.me.id;}).forEach(function(s){var m=last(staffChat(s.id)); out.push({type:'staff',id:s.id,name:s.name,sub:s.role==='admin'?'Admin':'Technician',color:s.color,snip:m?((m.from_staff===D.me.id?'You: ':'')+m.body):'No messages yet',ts:m?m.created_at:'',unread:unreadFrom(s.id)});});
+ D.customers.forEach(function(c){var m=last(custMsgs(c.id)); out.push({type:'cust',id:c.id,name:c.name,sub:c.address,color:'',snip:m?('You: '+m.body):'No messages yet',ts:m?m.created_at:'',unread:0});});
+ return out;
+}
+function rowHtml(t,on){return '<button class="cmmrow'+(on?' on':'')+'" data-cm="open" data-type="'+t.type+'" data-id="'+t.id+'">'+(t.type==='staff'?'<span class="dot" style="--c:'+esc(t.color||'#888')+'"></span>':'<span class="dot" style="--c:var(--gray)"></span>')+'<span class="nm">'+esc(t.name)+'<small>'+esc(t.snip)+'</small></span>'+(t.unread?'<span class="badge">'+t.unread+'</span>':'')+'</button>';}
+function listHtml(){
+ var all=threads(), q=D.q.trim().toLowerCase();
+ var f=function(t){return !q||(t.name+' '+(t.sub||'')).toLowerCase().indexOf(q)>=0;};
+ var team=all.filter(function(t){return t.type==='staff'&&f(t);});
+ var cs=all.filter(function(t){return t.type==='cust'&&f(t);}).sort(function(a,b){return (b.ts||'').localeCompare(a.ts||'')||a.name.localeCompare(b.name);});
+ var on=function(t){return D.sel&&D.sel.type===t.type&&D.sel.id===t.id;};
+ return '<aside class="cmmlist"><input id="cmmQ" type="search" placeholder="Search people and customers" value="'+esc(D.q)+'"><h4>Team</h4>'+(team.map(function(t){return rowHtml(t,on(t));}).join('')||'<p class="note">No other team members yet.</p>')+'<h4>Customers</h4>'+(cs.map(function(t){return rowHtml(t,on(t));}).join('')||'<p class="note">No customers found.</p>')+'</aside>';
+}
+function bubbles(arr,mineFn,nameFn,chFn){
+ return arr.map(function(m){var mine=mineFn(m); return '<div class="cmmb'+(mine?' me':'')+'">'+esc(m.body)+'<small>'+esc(nameFn(m))+' · '+esc(when(m.created_at))+(chFn?chFn(m):'')+'</small></div>';}).join('');
+}
+function custComposer(cid){
+ var c=cust(cid), js=D.jobs.filter(function(j){return j.customer_id===cid&&j.status!=='Canceled';});
+ var today=new Date().toISOString().slice(0,10), up=js.filter(function(j){return j.date>=today;}).sort(function(a,b){return a.date<b.date?-1:1;})[0], def=(up||js[0]||{}).id;
+ var jopts='<option value="">No specific job</option>'+js.slice(0,30).map(function(j){return '<option value="'+j.id+'"'+(j.id===def?' selected':'')+'>'+esc(j.svc)+' – '+esc(longDate(j.date))+'</option>';}).join('');
+ var dr=D.draft['cust:'+cid]||'';
+ return '<div class="cmmcomp"><div class="cmmtpls"><button class="btn sm" data-cm="tpl" data-k="remind">Appointment reminder</button><button class="btn sm" data-cm="tpl" data-k="otw">On my way</button><button class="btn sm" data-cm="tpl" data-k="late">Running late</button><button class="btn sm" data-cm="tpl" data-k="resched">Reschedule</button><button class="btn sm" data-cm="tpl" data-k="thanks">Thank you</button></div>'
+ +'<div class="cmmrow2"><label>Send by<select id="cmmCh"><option value="sms"'+(tel(c.phone)?'':' disabled')+'>Text message'+(tel(c.phone)?'':' (no phone)')+'</option><option value="email"'+(c.email?'':' disabled')+(!tel(c.phone)&&c.email?' selected':'')+'>Email'+(c.email?'':' (no email)')+'</option></select></label><label>About job<select id="cmmJob">'+jopts+'</select></label></div>'
+ +'<textarea id="cmmText" rows="3" placeholder="Type a message to '+esc(c.name||'the customer')+'…">'+esc(dr)+'</textarea><div class="cmmacts"><span class="note">Send opens your phone or email app with the message ready, and logs it in this thread.</span><button class="btn primary" data-cm="sendcust">Send</button></div></div>';
+}
+function threadHtml(){
+ var s=D.sel; if(!s||!D.me) return '<section class="cmmthread"><div class="cmmempty note">Pick a person or customer to start a conversation.</div></section>';
+ if(s.type==='staff'){var p=staff(s.id)||{}, arr=staffChat(s.id), dr=D.draft['staff:'+s.id]||'';
+  return '<section class="cmmthread"><div class="cmmhead"><b>'+esc(p.name)+'</b> <span class="note">'+(p.role==='admin'?'Admin':'Technician')+'</span></div><div class="cmmmsgs" id="cmmMsgs">'+(bubbles(arr,function(m){return m.from_staff===D.me.id;},function(m){return m.from_staff===D.me.id?'You':(p.name||'');})||'<p class="note">No messages yet. Say hello.</p>')+'</div><div class="cmmcomp"><textarea id="cmmText" rows="2" placeholder="Message '+esc(p.name||'')+'…">'+esc(dr)+'</textarea><div class="cmmacts"><span class="note">Delivered inside the portal.</span><button class="btn primary" data-cm="sendstaff">Send</button></div></div></section>';}
+ var c=cust(s.id), arr2=custMsgs(s.id);
+ return '<section class="cmmthread"><div class="cmmhead"><b>'+esc(c.name)+'</b> <span class="note">'+esc(c.address||'')+'</span><div class="note">'+(c.phone?esc(c.phone):'No phone')+' · '+(c.email?esc(c.email):'No email')+'</div></div><div class="cmmmsgs" id="cmmMsgs">'+(bubbles(arr2,function(){return true;},function(m){var st=staff(m.sender_id); return st?st.name:'Office';},function(m){return ' · '+(m.channel==='email'?'Email':'Text');})||'<p class="note">No messages with this customer yet.</p>')+'</div>'+custComposer(s.id)+'</section>';
+}
+function renderPage(){
+ var b=$('#cmmBody'); if(!b) return;
+ var ta=$('#cmmText'), txt=ta?ta.value:null, key=keyOf(D.sel), hadFocus=ta&&document.activeElement===ta, qf=document.activeElement&&document.activeElement.id==='cmmQ';
+ if(txt!==null&&key) D.draft[key]=txt;
+ b.innerHTML='<div class="cmm">'+listHtml()+threadHtml()+'</div>';
+ var m=$('#cmmMsgs'); if(m) m.scrollTop=m.scrollHeight;
+ if(hadFocus&&$('#cmmText')){var t2=$('#cmmText'); t2.focus(); t2.setSelectionRange(t2.value.length,t2.value.length);}
+ if(qf&&$('#cmmQ')){var q2=$('#cmmQ'); q2.focus(); q2.setSelectionRange(q2.value.length,q2.value.length);}
+}
+
+/* ---------- dashboard card (admin) and technician section ---------- */
+function dashCard(){
+ var all=threads().filter(function(t){return t.ts;}).sort(function(a,b){return b.ts.localeCompare(a.ts);}).slice(0,6), n=unreadAll();
+ var rows=all.map(function(t){return rowHtml(t,false);}).join('')||'<p class="note">No conversations yet. Open Messages to start one.</p>';
+ return '<div id="cmmDash"><section class="invcard"><div class="invhead"><h3>Messages'+(n?' <span class="badge">'+n+' unread</span>':'')+'</h3><button class="btn" data-cm="openpage">View all</button></div><div class="cmmdashlist">'+rows+'</div></section></div>';
+}
+function paintDash(){
+ var dv=$('#dashView'); if(!dv||!isAdmin()) return;
+ var tmp=document.createElement('div'); tmp.innerHTML=dashCard(); var nu=tmp.firstChild, old=$('#cmmDash',dv);
+ if(old) old.replaceWith(nu); else dv.appendChild(nu);
+}
+function techSection(){
+ if(!D.me||isAdmin()) return '';
+ var ids=[]; D.jobs.filter(function(j){return j.tech_id===D.me.id;}).forEach(function(j){if(ids.indexOf(j.customer_id)<0) ids.push(j.customer_id);});
+ if(!ids.length) return '<div class="cmmtech"><h3>Customers on your jobs</h3><p class="note">Customers appear here once you have jobs assigned.</p></div>';
+ if(!D.tc||ids.indexOf(D.tc)<0) D.tc=ids[0];
+ D.sel={type:'cust',id:D.tc};
+ var arr=custMsgs(D.tc);
+ return '<div class="cmmtech"><h3>Customers on your jobs</h3><label>Customer<select id="cmmTC">'+ids.map(function(id){var c=cust(id); return '<option value="'+id+'"'+(id===D.tc?' selected':'')+'>'+esc(c.name||'Customer')+(c.address?' – '+esc(c.address):'')+'</option>';}).join('')+'</select></label><div class="cmmmsgs" id="cmmMsgs" style="max-height:260px">'+(bubbles(arr,function(){return true;},function(m){var st=staff(m.sender_id); return st?st.name:'Office';},function(m){return ' · '+(m.channel==='email'?'Email':'Text');})||'<p class="note">No messages with this customer yet.</p>')+'</div>'+custComposer(D.tc)+'</div>';
+}
+function paintTech(){
+ var v=$('#techMsgView'); if(!v||D.me&&isAdmin()||!D.me) return;
+ var ta=$('#cmmText'), txt=ta?ta.value:null; if(txt!==null&&D.sel) D.draft[keyOf(D.sel)]=txt;
+ var old=$('#cmmTech',v), tmp=document.createElement('div'); tmp.id='cmmTech'; tmp.innerHTML=techSection();
+ if(old) old.replaceWith(tmp); else v.appendChild(tmp);
+}
+
+/* ---------- actions ---------- */
+async function refresh(){ if(D.loading) return; D.loading=true; try{ if(await load()){ badge(); paintDash(); paintTech(); if(dlg.open) renderPage(); } }catch(e){} D.loading=false; }
+function selectThread(type,id){
+ D.sel={type:type,id:id}; renderPage();
+ if(type==='staff'&&D.me){var un=D.chats.filter(function(c){return c.from_staff===id&&c.to_staff===D.me.id&&!c.read_at;}); if(un.length){var now=new Date().toISOString(); un.forEach(function(c){c.read_at=now;}); sb.from('gl_chat').update({read_at:now}).in('id',un.map(function(c){return c.id;})).then(function(){badge(); paintDash(); renderPage();});}}
+}
+function fillTpl(k){
+ var c=cust(D.sel.id), first=(c.name||'').replace(' (example)','').split(' ')[0]||'there', jid=($('#cmmJob')||{}).value, j=D.jobs.find(function(x){return x.id===jid;});
+ var t=j&&staff(j.tech_id), tn=t?t.name:'our technician', me=D.me?D.me.name:'our team', B=C.business;
+ var T={remind:'Hi '+first+', this is '+B+'. Reminder: your '+(j?j.svc:'service')+(j?' is scheduled for '+longDate(j.date)+' at '+fmtT(j.start_time)+' with '+tn:' is coming up')+'. Reply here if you need to change anything.',
+ otw:'Hi '+first+', this is '+me+' from '+B+'. I am on my way to '+(c.address||'your address')+' and should arrive shortly.',
+ late:'Hi '+first+', '+me+' from '+B+' here. I am running a little behind and will arrive later than planned. Thank you for your patience.',
+ resched:'Hi '+first+', this is '+B+'. We need to reschedule your '+(j?j.svc+' on '+longDate(j.date):'service')+'. What day works best for you?',
+ thanks:'Hi '+first+', thank you for choosing '+B+'! Let us know if there is anything else we can do for you.'};
+ var ta=$('#cmmText'); if(ta){ta.value=T[k]||''; ta.focus();}
+}
+async function sendCust(){
+ var c=cust(D.sel.id), text=($('#cmmText').value||'').trim(), ch=$('#cmmCh').value, jid=$('#cmmJob').value||null;
+ if(!text) return toast('Type a message first');
+ if(ch==='sms'&&!tel(c.phone)) return toast('This customer has no phone number');
+ if(ch==='email'&&!c.email) return toast('This customer has no email address');
+ var href=ch==='sms'?'sms:'+tel(c.phone)+'?&body='+encodeURIComponent(text):'mailto:'+c.email+'?subject='+encodeURIComponent(C.business+' – message')+'&body='+encodeURIComponent(text);
+ var r=await sb.from('gl_messages').insert({job_id:jid,customer_id:c.id,sender_id:D.me&&D.me.id,channel:ch,body:text});
+ if(r.error) toast('Opening your app, but it was not logged: '+r.error.message);
+ D.draft[keyOf(D.sel)]=''; $('#cmmText').value='';
+ window.location.href=href;
+ await refresh();
+}
+async function sendStaff(){
+ var text=($('#cmmText').value||'').trim(); if(!text) return toast('Type a message first');
+ var r=await sb.from('gl_chat').insert({from_staff:D.me.id,to_staff:D.sel.id,body:text}); if(r.error) return toast(r.error.message);
+ D.draft[keyOf(D.sel)]=''; $('#cmmText').value=''; await refresh();
+}
+function onClick(ev){
+ var b=ev.target.closest('[data-cm]'); if(!b) return; var a=b.dataset.cm;
+ if(a==='open'){ if(!dlg.open) openPage(); selectThread(b.dataset.type,b.dataset.id); }
+ else if(a==='openpage'){openPage();}
+ else if(a==='tpl'){fillTpl(b.dataset.k);}
+ else if(a==='sendcust'){sendCust();}
+ else if(a==='sendstaff'){sendStaff();}
+}
+function openPage(){
+ dlg.showModal();
+ if(!D.sel&&D.me){var t=threads(), u=t.filter(function(x){return x.unread;})[0]||t[0]; if(u) D.sel={type:u.type,id:u.id};}
+ renderPage(); refresh().then(function(){ if(D.sel&&D.sel.type==='staff') selectThread('staff',D.sel.id); });
+}
+document.addEventListener('click',function(ev){ if(ev.target.closest&&ev.target.closest('#cmmBody,#cmmDash,#cmmTech')) onClick(ev); });
+document.addEventListener('input',function(ev){var t=ev.target; if(t.id==='cmmText'&&D.sel) D.draft[keyOf(D.sel)]=t.value; if(t.id==='cmmQ'){D.q=t.value; renderPage();}});
+document.addEventListener('change',function(ev){var t=ev.target; if(t.id==='cmmTC'){D.tc=t.value; paintTech();}});
+document.addEventListener('keydown',function(ev){var t=ev.target; if(t.id==='cmmText'&&ev.key==='Enter'&&!ev.shiftKey&&D.sel&&D.sel.type==='staff'){ev.preventDefault(); sendStaff();}});
+dlg.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) dlg.close();});
+var btn=$('#cmmBtn'); if(btn) btn.addEventListener('click',openPage);
+var dv=$('#dashView'); function onDash(){ if(!dv||!dv.children.length) return; if(D.t&&!$('#cmmDash',dv)) paintDash(); if(!D.loading&&Date.now()-D.t>12000) refresh(); }
+if(dv) new MutationObserver(onDash).observe(dv,{childList:true});
+var tv=$('#techMsgView'); function onTech(){ if(tv&&!$('#cmmTech',tv)&&D.t) paintTech(); if(!D.loading&&Date.now()-D.t>12000) refresh(); }
+if(tv) new MutationObserver(onTech).observe(tv,{childList:true});
+setTimeout(refresh,1500); setInterval(function(){ if(dlg.open||document.visibilityState==='visible') refresh(); },20000);
 })();
 </script>
 </body>
