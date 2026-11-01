@@ -1,0 +1,12 @@
+{
+  "name": "tech-dispatch-calendar",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite --host --port 3000",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}

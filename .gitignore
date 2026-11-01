@@ -1,0 +1,9 @@
+# --- app-platform managed ---
+node_modules/
+dist/
+.logs/
+*.local
+.env
+.env.*
+.DS_Store
+# --- app-platform managed ---

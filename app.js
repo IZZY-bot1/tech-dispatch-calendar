@@ -78,7 +78,7 @@ function showRecovery() {
 }
 
 async function boot(session) {
-  if (!session) { me = null; $("#loginView").hidden = false; $("#appView").hidden = true; $("#noAccess").hidden = true; return; }
+  if (!session) { me = null; isAdmin = false; $("#loginView").hidden = false; $("#appView").hidden = true; $("#noAccess").hidden = true; return; }
   const { data, error } = await sb.rpc("gl_claim_staff");
   if (error || !data || !data.id || !data.active) { $("#loginView").hidden = true; $("#appView").hidden = true; $("#noAccess").hidden = false; return; }
   me = data; isAdmin = me.role === "admin";
@@ -249,6 +249,7 @@ const ago = t => { if (!t) return "never"; const m = Math.round((Date.now() - ne
   return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m/60)} hr ago` : new Date(t).toLocaleDateString(undefined,{month:"short",day:"numeric"}); };
 const initials = n => n.replace(/\(.*?\)/g,"").trim().split(/\s+/).map(w => w[0]).join("").slice(0,2).toUpperCase();
 function renderDash() {
+  if (!me || !isAdmin) return; // signed out mid-session; async loaders may still call this
   const today = iso(new Date());
   const live = jobs.filter(j => j.status !== "Canceled");
   const tj = live.filter(j => j.date === today), T = totals(tj);
@@ -609,6 +610,7 @@ const statusOf = id => statuses.find(s => s.staff_id === id);
 const unreadFrom = id => chats.filter(c => c.from_staff === id && c.to_staff === me.id && !c.read_at).length;
 async function loadStatus() { const { data } = await sb.from("gl_staff_status").select("*"); statuses = data || []; if (isAdmin && adminTab === "dash") renderDash(); }
 async function loadChat() {
+  if (!me) return; // signed out mid-session
   const { data } = await sb.from("gl_chat").select("*").order("created_at").limit(1000); chats = data || [];
   const n = chats.filter(c => c.to_staff === me.id && !c.read_at).length;
   if (!isAdmin) { $("#techUnread").textContent = n; $("#techUnread").hidden = !n; if (techTab === "msg") renderTechChat(); }
