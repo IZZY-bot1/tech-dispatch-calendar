@@ -11,34 +11,81 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style id="techPage">
 /* Manage technicians, Download jobs and Invoices open inside the main window (sidebar stays) */
-#techDlg,#dlDlg,#invDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
-#techDlg>.f,#dlDlg>.f,#invDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
+#techDlg,#dlDlg,#invDlg,#estDlg,#ordDlg{position:fixed;inset:0;width:auto;height:auto;max-width:none;max-height:none;margin:0;border:0;border-radius:0;background:var(--bg);overflow:auto;z-index:1000}
+#techDlg>.f,#dlDlg>.f,#invDlg>.f,#estDlg>.f,#ordDlg>.f{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left));gap:16px}
 #invDlg>.f{max-width:1240px;display:block}
+#estDlg>.f{max-width:1240px;display:block}
+#ordDlg>.f{max-width:1240px;display:block}
 #dlDlg>.f{max-width:760px}
 #techDlg .scroll{max-height:none;overflow-x:auto}
 #techDlg .tform{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
 #invDlg .det-h{margin-bottom:14px}
+#estDlg .det-h{margin-bottom:14px}
+#ordDlg .det-h{margin-bottom:14px}
 #invDlg h3{margin:0;font:700 16px var(--display)}
+#estDlg h3{margin:0;font:700 16px var(--display)}
+#ordDlg h3{margin:0;font:700 16px var(--display)}
 #invDlg .invtabs{margin-bottom:14px}
+#estDlg .invtabs{margin-bottom:14px}
+#ordDlg .invtabs{margin-bottom:14px}
 #invDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+#estDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
+#ordDlg .invhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 10px}
 #invDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
+#estDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
+#ordDlg .scroll{overflow-x:auto;max-height:none;margin-bottom:12px}
 #invDlg .tbl td,#invDlg .tbl th{vertical-align:top}
+#estDlg .tbl td,#estDlg .tbl th{vertical-align:top}
+#ordDlg .tbl td,#ordDlg .tbl th{vertical-align:top}
 #invDlg input,#invDlg select,#invDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+#estDlg input,#estDlg select,#estDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+#ordDlg input,#ordDlg select,#ordDlg textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
 #invDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
+#estDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
+#ordDlg label{display:grid;gap:4px;font-size:13px;color:var(--muted);margin-bottom:10px}
 #invDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#estDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#ordDlg .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 #invDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
+#estDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
+#ordDlg .iacts{display:flex;gap:6px;flex-wrap:wrap}
 #invDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
+#estDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
+#ordDlg .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
 #invDlg .invstats b{color:var(--fg);font-family:var(--mono)}
+#estDlg .invstats b{color:var(--fg);font-family:var(--mono)}
+#ordDlg .invstats b{color:var(--fg);font-family:var(--mono)}
 #invDlg .invtotal{text-align:right;font-size:16px}
+#estDlg .invtotal{text-align:right;font-size:16px}
+#ordDlg .invtotal{text-align:right;font-size:16px}
 #invDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
+#estDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
+#ordDlg .invpanel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
 #invDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+#estDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+#ordDlg .invwarn{background:var(--today);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:14px}
 #invDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+#estDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
+#ordDlg .invcat{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}
 #invDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#estDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#ordDlg .acts{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 #invDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
+#estDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
+#ordDlg .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
 #invDlg .ipill.Approved,#invDlg .ipill.Paid,#invDlg .ipill.Converted,#invDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
+#estDlg .ipill.Approved,#estDlg .ipill.Paid,#estDlg .ipill.Converted,#estDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
+#ordDlg .ipill.Approved,#ordDlg .ipill.Paid,#ordDlg .ipill.Converted,#ordDlg .ipill.Completed{color:var(--ok);border-color:var(--ok)}
 #invDlg .ipill.Sent,#invDlg .ipill.Partial,#invDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
+#estDlg .ipill.Sent,#estDlg .ipill.Partial,#estDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
+#ordDlg .ipill.Sent,#ordDlg .ipill.Partial,#ordDlg .ipill.Scheduled{color:var(--warn);border-color:var(--warn)}
 #invDlg .ipill.Declined,#invDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
+#estDlg .ipill.Declined,#estDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
+#ordDlg .ipill.Declined,#ordDlg .ipill.Unpaid{color:var(--bad);border-color:var(--bad)}
 #invDlg td:first-child select[data-f="service_id"],#invDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
+#estDlg td:first-child select[data-f="service_id"],#estDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
+#ordDlg td:first-child select[data-f="service_id"],#ordDlg td:first-child input[data-f="description"]{display:block;width:100%;min-width:240px}
+#estDlg input[type="checkbox"],#invDlg input[type="checkbox"]{width:auto;flex:none;padding:0}
 #invDash{grid-column:1/-1;display:grid;gap:14px}
 #invDash .invcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
 #invDash h3{margin:0;font:700 16px var(--display)}
@@ -46,6 +93,8 @@
 #invDash .scroll{overflow-x:auto}
 #invDash .tbl td,#invDash .tbl th{vertical-align:top}
 #invDash select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+#invDash .invstats{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 10px;color:var(--muted)}
+#invDash .invstats b{color:var(--fg);font-family:var(--mono)}
 #invDash .iacts{display:flex;gap:6px;flex-wrap:wrap}
 #invDash .ipill{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--line);font-size:12px}
 #invDash .ipill.Approved,#invDash .ipill.Paid,#invDash .ipill.Converted,#invDash .ipill.Completed{color:var(--ok);border-color:var(--ok)}
@@ -83,6 +132,8 @@
   <nav class="nav">
     <button class="navb" data-atab="dash" aria-pressed="true">▦ Dashboard</button>
     <button class="navb" data-atab="cal" aria-pressed="false">▤ Calendar</button>
+    <button class="navb" id="estBtn">✎ Estimates</button>
+    <button class="navb" id="ordBtn">⚒ Job orders</button>
     <button class="navb" id="invBtn">▭ Invoices</button>
     <button class="navb" id="techBtn">☻ Manage technicians</button>
     <button class="navb" id="dlBtn">⭳ Download jobs</button>
@@ -188,6 +239,16 @@
   <div class="f"><div class="det-h"><h2>Invoices</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="invBody"></div></div>
 </dialog>
 
+<!-- ===== ESTIMATES ===== -->
+<dialog id="estDlg" class="wide">
+  <div class="f"><div class="det-h"><h2>Estimates</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="estBody"></div></div>
+</dialog>
+
+<!-- ===== JOB ORDERS PAGE ===== -->
+<dialog id="ordDlg" class="wide">
+  <div class="f"><div class="det-h"><h2>Job orders</h2><button type="button" class="btn" data-close>← Back to dashboard</button></div><div id="ordBody"></div></div>
+</dialog>
+
 <!-- ===== TECHNICIANS ===== -->
 <dialog id="techDlg" class="wide">
   <div class="f">
@@ -238,7 +299,7 @@
 <script>
 /* Manage technicians, Download jobs and Invoices as pages inside the main window; sidebar and dashboard stay untouched */
 (function(){
-  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"]], saved=[];
+  var pairs=[["techDlg","techBtn"],["dlDlg","dlBtn"],["invDlg","invBtn"],["estDlg","estBtn"],["ordDlg","ordBtn"]], saved=[];
   var nav=function(){return document.querySelectorAll(".nav .navb[data-atab]");};
   var anyOpen=function(){return pairs.some(function(p){var d=document.getElementById(p[0]);return d&&d.open;});};
   function place(d){var s=document.querySelector(".side"),r=s?s.getBoundingClientRect():{right:0,bottom:0,width:0},stacked=r.width>innerWidth*0.9;
@@ -247,7 +308,7 @@
     var d=document.getElementById(p[0]); if(!d) return;
     d.showModal=function(){
       if(!anyOpen()) saved=[].map.call(nav(),function(b){return b.getAttribute("aria-pressed");});
-      place(d); d.show(); d.scrollTop=0;
+      pairs.forEach(function(q){if(q[0]!==p[0]){var o=document.getElementById(q[0]); if(o&&o.open) o.close();}}); place(d); d.show(); d.scrollTop=0;
       nav().forEach(function(b){b.setAttribute("aria-pressed","false");});
       pairs.forEach(function(q){var b=document.getElementById(q[1]); if(b) b.setAttribute("aria-pressed",q[1]===p[1]?"true":"false");});
     };
@@ -259,7 +320,7 @@
     });
   });
   document.addEventListener("click",function(e){
-    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,[data-signout]")) return;
+    if(!e.target.closest||!e.target.closest("[data-atab],#techBtn,#dlBtn,#invBtn,#estBtn,#ordBtn,[data-signout]")) return;
     pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) d.close();});
   },true);
   window.addEventListener("resize",function(){pairs.forEach(function(p){var d=document.getElementById(p[0]); if(d&&d.open) place(d);});});
@@ -350,13 +411,11 @@ function printDoc(doc){var p=$('#printArea'); if(!p){toast('Print area missing')
 /* ---------- render ---------- */
 function render(){
  var b=$('#invBody'); if(!b) return;
- if(S.draft){b.innerHTML=editorHtml(); paintDash(); return;}
- if(S.panel&&S.panel.type==='cv'){b.innerHTML=panelHtml(); paintDash(); return;}
  var h='';
  if(!S.setup) h+='<div class="invwarn"><b>One-time setup needed.</b> The estimate and service tables are not in your database yet. Run <code>greenlight-invoices-setup.sql</code> in the Supabase SQL editor, then reopen this page. Existing invoices below already work.</div>';
- if(S.panel) h+=panelHtml();
+ if(S.panel&&S.panel.type==='pay') h+=panelHtml();
  h+=invTab()+catalogHtml();
- b.innerHTML=h; paintDash();
+ b.innerHTML=h; paintDash(true);
 }
 function pill(s){return '<span class="ipill '+String(s).replace(/\s/g,'')+'">'+esc(s)+'</span>';}
 function estTable(limit){
@@ -365,25 +424,45 @@ function estTable(limit){
   var a='<button class="btn sm" data-act="eprint" data-id="'+e.id+'">Print</button><button class="btn sm" data-act="esend" data-id="'+e.id+'">Send</button>';
   if(e.status!=='Converted') a='<button class="btn sm" data-act="eedit" data-id="'+e.id+'">Edit</button>'+a;
   if(e.status==='Draft'||e.status==='Sent') a+='<button class="btn sm" data-act="eappr" data-id="'+e.id+'">Approved</button><button class="btn sm" data-act="edecl" data-id="'+e.id+'">Declined</button>';
-  if(e.status==='Approved') a+='<button class="btn sm primary" data-act="econv" data-id="'+e.id+'">Create job orders</button>';
+  if(e.status==='Approved') a+='<button class="btn sm primary" data-act="econv" data-id="'+e.id+'">Send to job orders</button>';
   return '<tr><td>'+estNo(e)+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(names)+'</td><td>'+money(eTotal(e.id))+'</td><td>'+pill(e.status)+'</td><td class="iacts">'+a+'</td></tr>';}).join('');
  return '<div class="scroll"><table class="tbl"><tr><th>#</th><th>Customer</th><th>Technician</th><th>Total</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">'+(S.setup?'No estimates yet. Create one, send it, and convert it to job orders when approved.':'Estimates turn on after the one-time database setup (see the Invoices page).')+'</td></tr>')+'</table></div>';
 }
-function jobTable(){
- var t0=iso(), list=S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
+function jobTable(all){
+ var t0=iso(), list=all?S.jobs.slice(0,100):S.jobs.filter(function(j){return j.date>=t0&&j.status!=='Canceled'&&j.status!=='Completed';}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).slice(0,10);
  var rows=list.map(function(j){var c=cust(j.customer_id);
   return '<tr><td>'+esc(longDate(j.date))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td><select data-act="jtech" data-id="'+j.id+'">'+techOpts(j.tech_id)+'</select></td><td>'+pill(j.status)+'</td><td>'+money(jobTotal(j))+'</td></tr>';}).join('');
  return '<div class="scroll"><table class="tbl"><tr><th>Date</th><th>Customer</th><th>Service</th><th>Technician</th><th>Status</th><th>Amount</th></tr>'+(rows||'<tr><td colspan="6" class="note">No upcoming job orders.</td></tr>')+'</table></div>';
 }
+function invCard(){
+ var jobs=S.jobs.filter(function(j){return j.status!=='Canceled'&&itemsOf(j.id).length;});
+ var billed=0,paid=0; jobs.forEach(function(j){var t=jobTotal(j); billed+=t; paid+=Math.min(num(j.amount_paid),t);});
+ var due=jobs.filter(function(j){return jobTotal(j)-num(j.amount_paid)>0.004;}).slice(0,5);
+ var rows=due.map(function(j){var c=cust(j.customer_id);return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+money(Math.max(0,jobTotal(j)-num(j.amount_paid)))+'</td><td>'+pill(j.pay_status||'Unpaid')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'">Send invoice</button></td></tr>';}).join('');
+ return '<section class="invcard"><div class="invhead"><h3>Invoices</h3><button class="btn" data-act="openpage" data-id="inv">View all</button></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">Nothing outstanding.</td></tr>')+'</table></div></section>';
+}
 function dashHtml(){
- return '<div id="invDash"><section class="invcard"><div class="invhead"><h3>Estimates</h3><button class="btn primary" data-act="enew">+ New estimate</button></div>'+estTable(8)+'</section><section class="invcard"><div class="invhead"><h3>Job orders</h3><span class="note">Next 10 upcoming. Change the technician here; times are on the Calendar.</span></div>'+jobTable()+'</section></div>';
+ return '<div id="invDash"><section class="invcard"><div class="invhead"><h3>Estimates</h3><span class="iacts"><button class="btn" data-act="openpage" data-id="est">View all</button><button class="btn primary" data-act="enew">+ New estimate</button></span></div>'+estTable(8)+'</section><section class="invcard"><div class="invhead"><h3>Job orders</h3><span class="iacts"><span class="note">Next 10 upcoming. Change the technician here; times are on the Calendar.</span><button class="btn" data-act="openpage" data-id="ord">View all</button></span></div>'+jobTable()+'</section>'+invCard()+'</div>';
 }
 var loading=false;
-function paintDash(){
+function paintDash(force){
  var dv=$('#dashView'); if(!dv) return;
  var tmp=document.createElement('div'); tmp.innerHTML=dashHtml(); var nu=tmp.firstChild, old=$('#invDash',dv);
  if(old) old.replaceWith(nu); else dv.appendChild(nu);
+ paintPages(force);
 }
+function paintPages(force){
+ var e=$('#estBody'), j=$('#ordBody');
+ if(e){
+  if(S.draft){ if(force||!e.querySelector('#edCust')) e.innerHTML=editorHtml(); }
+  else if(S.panel&&S.panel.type==='cv'){ if(force||!e.querySelector('#cvDate')){ e.innerHTML=panelHtml(); updAvail(); } }
+  else e.innerHTML='<div class="invhead"><span class="note">All estimates. Create one, send it to the customer, and when it is approved send it to job orders.</span><button class="btn primary" data-act="enew">+ New estimate</button></div>'+estTable(500);
+ }
+ if(j) j.innerHTML='<div class="invhead"><span class="note">Change the technician right here; times and details are on the Calendar.</span></div>'+jobTable(true);
+}
+function curPage(){return ($('#estDlg')&&$('#estDlg').open)?'est':($('#ordDlg')&&$('#ordDlg').open)?'ord':null;}
+function finish(){}
+function openPage(k){S.back=null; S.draft=null; S.panel=null; var x=$('#'+k+'Dlg'); if(x){x.showModal(); paintPages(); reload().catch(function(){});}}
 function onDashMut(){
  var dv=$('#dashView'); if(!dv||!dv.children.length) return;
  if(!$('#invDash',dv)) paintDash();
@@ -410,7 +489,13 @@ function panelHtml(){
  if(P.type==='pay'){var j=S.jobs.find(function(x){return x.id===P.id;}); if(!j) return ''; var tot=jobTotal(j);
   return '<div class="invpanel"><h3>Payment – '+esc(invNo(j))+' · '+esc(cust(j.customer_id).name||'')+' · '+money(tot)+'</h3><div class="row"><label>Status<select id="pyStatus">'+['Unpaid','Partial','Paid','Refunded'].map(function(s){return '<option'+(s===(j.pay_status||'Unpaid')?' selected':'')+'>'+s+'</option>';}).join('')+'</select></label><label>Amount paid ($)<input id="pyAmt" type="number" min="0" step="0.01" value="'+num(j.amount_paid)+'"></label></div><div class="row"><label>Method<select id="pyMethod">'+['','Cash','Card','Check','Zelle','Venmo','Invoice','Other'].map(function(s){return '<option'+(s===(j.pay_method||'')?' selected':'')+'>'+s+'</option>';}).join('')+'</select></label><label>Payment date<input id="pyDate" type="date" value="'+esc(j.pay_date||iso())+'"></label></div><div class="acts"><button class="btn" data-act="pfull" data-id="'+j.id+'">Mark paid in full</button><div class="grp"><button class="btn" data-act="pclose">Cancel</button><button class="btn primary" data-act="psave" data-id="'+j.id+'">Save payment</button></div></div></div>';}
  var e=S.estimates.find(function(x){return x.id===P.id;}); if(!e) return '';
- return '<div class="invpanel"><h3>Create job orders from '+estNo(e)+'</h3><div class="row"><label>Date<input id="cvDate" type="date" value="'+iso()+'"></label><label>Start time<input id="cvStart" type="time" value="08:00"></label></div><div class="scroll"><table class="tbl"><tr><th>Service</th><th>Amount</th><th>Technician</th><th>Hours</th></tr>'+eItems(e.id).map(function(i){return '<tr><td>'+esc(i.description)+'</td><td>'+money(num(i.qty)*num(i.unit_price))+'</td><td><select data-cv="'+i.id+'" data-f="tech">'+techOpts(i.tech_id)+'</select></td><td><input data-cv="'+i.id+'" data-f="dur" type="number" min="0.25" step="0.25" value="1" style="width:70px"></td></tr>';}).join('')+'</table></div><div class="acts"><span class="note">Each service becomes its own job on the calendar with its invoice line.</span><div class="grp"><button class="btn" data-act="pclose">Cancel</button><button class="btn primary" data-act="cvgo" data-id="'+e.id+'">Create job orders</button></div></div></div>';
+ var its=eItems(e.id), c=cust(e.customer_id);
+ return '<div class="invpanel"><h3>Send '+estNo(e)+' to job orders</h3><p class="note">Pick the date and an open time for each service. The customer is emailed the date, time and technician name.</p>'
+ +'<div class="row"><label>Date<input id="cvDate" type="date" value="'+iso()+'"></label><label>Customer email<input id="cvEmail" type="email" value="'+esc(c.email||'')+'" placeholder="customer@email.com"></label></div>'
+ +'<div class="scroll"><table class="tbl"><tr><th>Service</th><th>Amount</th><th>Technician</th><th>Start</th><th>Hours</th></tr>'+its.map(function(i){return '<tr><td>'+esc(i.description)+'</td><td>'+money(num(i.qty)*num(i.unit_price))+'</td><td><select data-cv="'+i.id+'" data-f="tech">'+techOpts(i.tech_id)+'</select></td><td><input data-cv="'+i.id+'" data-f="start" type="time" step="900" value="08:00"></td><td><input data-cv="'+i.id+'" data-f="dur" type="number" min="0.25" step="0.25" value="1" style="width:70px"></td></tr>';}).join('')+'</table></div>'
+ +'<div id="cvAvail" class="note"></div>'
+ +'<label style="display:flex;align-items:center;gap:8px"><input id="cvMail" type="checkbox" checked> Email the customer the date, time and technician name</label>'
+ +'<div class="acts"><button class="btn" data-act="cvsuggest" data-id="'+e.id+'">Suggest open times</button><div class="grp"><button class="btn" data-act="pclose">Cancel</button><button class="btn primary" data-act="cvgo" data-id="'+e.id+'">Send to job orders</button></div></div></div>';
 }
 
 /* ---------- estimate editor ---------- */
@@ -426,7 +511,7 @@ function editorHtml(){
  +'<label>Notes for the customer<textarea id="edNotes" rows="2">'+esc(D.notes)+'</textarea></label><p class="invtotal">Total <b id="edTotal">'+money(tot)+'</b></p>'
  +'<div class="acts"><button class="btn" data-act="ecancel">Cancel</button><div class="grp"><button class="btn" data-act="esave">Save draft</button><button class="btn primary" data-act="esavesend">Save &amp; send estimate</button></div></div>';
 }
-function openEditor(e){S.panel=null; d.showModal(); startDraft(e);}
+function openEditor(e){S.panel=null; $('#estDlg').showModal(); startDraft(e);}
 function startDraft(e){
  S.draft=e?{id:e.id,customer_id:e.customer_id,notes:e.notes||'',newCust:false,nc:{name:'',address:'',phone:'',email:''},lines:eItems(e.id).map(function(i){return {service_id:i.service_id||'',description:i.description,job_type:i.job_type,qty:i.qty,unit_price:i.unit_price,tech_id:i.tech_id||''};})}
  :{id:null,customer_id:'',notes:'',newCust:false,nc:{name:'',address:'',phone:'',email:''},lines:[newLine()]};
@@ -446,26 +531,67 @@ async function saveEstimate(send){
  else{var r=await sb.from('gl_estimates').insert({customer_id:cid,notes:D.notes.trim(),status:'Draft',created_by:S.me&&S.me.id||null}).select().single(); if(r.error) return toast(r.error.message); eid=r.data.id;}
  var ins=await sb.from('gl_estimate_items').insert(lines.map(function(l){return {estimate_id:eid,service_id:(l.service_id&&String(l.service_id).indexOf('starter-')!==0)?l.service_id:null,description:l.description.trim(),job_type:l.job_type||'Other',qty:num(l.qty)||1,unit_price:num(l.unit_price),tech_id:l.tech_id||null};}));
  if(ins.error) return toast(ins.error.message);
- S.draft=null; d.close(); await load(); render(); toast('Estimate saved');
+ S.draft=null; finish(); await load(); render(); toast('Estimate saved');
  if(send) await sendEstimate(eid);
 }
 async function sendEstimate(eid){
  var e=S.estimates.find(function(x){return x.id===eid;}); if(!e) return;
  if(await sendDoc(estDoc(e))){await sb.from('gl_estimates').update({status:e.status==='Draft'?'Sent':e.status,sent_at:new Date().toISOString()}).eq('id',eid); await reload();}
 }
+function toMin(x){var p=String(x||'').split(':'); return (+p[0]||0)*60+(+p[1]||0);}
+function fmtMin(m){var h=Math.floor(m/60),mm=m%60; return (h%12||12)+':'+String(mm).padStart(2,'0')+(h>=12?' PM':' AM');}
+function busyOf(tid,date){return S.jobs.filter(function(j){return tid&&j.tech_id===tid&&j.date===date&&j.status!=='Canceled';}).map(function(j){var a=toMin(j.start_time);return [a,a+Math.round(num(j.dur)*60)];});}
+function lineVals(id){var g=function(f){var x=$('[data-cv="'+id+'"][data-f="'+f+'"]'); return x?x.value:'';}; return {tech:g('tech'),start:g('start'),dur:Math.max(.25,num(g('dur'))||1)};}
+function updAvail(){
+ var el=$('#cvAvail'), dt=$('#cvDate'); if(!el||!dt||!S.panel) return;
+ var e=S.estimates.find(function(x){return x.id===S.panel.id;}); if(!e) return;
+ var date=dt.value, msgs=[], taken={};
+ eItems(e.id).forEach(function(it){var L=lineVals(it.id);
+  if(!L.tech){msgs.push(esc(it.description)+': no technician assigned yet'); return;}
+  var a=toMin(L.start), z=a+Math.round(L.dur*60), b=busyOf(L.tech,date).concat(taken[L.tech]||[]);
+  var clash=b.some(function(x){return a<x[1]&&z>x[0];}); (taken[L.tech]=taken[L.tech]||[]).push([a,z]);
+  var booked=busyOf(L.tech,date).map(function(x){return fmtMin(x[0])+' – '+fmtMin(x[1]);}).join(', ');
+  msgs.push('<b>'+esc((tech(L.tech)||{}).name)+'</b>, '+esc(it.description)+': '+fmtMin(a)+' – '+fmtMin(z)+(clash?' <span style="color:var(--bad)">overlaps another job</span>':' <span style="color:var(--ok)">open</span>')+(booked?' · already booked '+booked:' · nothing else booked that day'));});
+ el.innerHTML=msgs.join('<br>');
+}
+function suggest(eid){
+ var date=$('#cvDate').value, taken={}, bad=false;
+ eItems(eid).forEach(function(it){var L=lineVals(it.id); if(!L.tech) return;
+  var dm=Math.round(L.dur*60), b=busyOf(L.tech,date).concat(taken[L.tech]||[]), a=480, ok=false;
+  for(;a+dm<=1020;a+=15){ if(!b.some(function(x){return a<x[1]&&a+dm>x[0];})){ok=true;break;} }
+  if(!ok){bad=true; toast('No open time that day for '+((tech(L.tech)||{}).name||'the technician')); return;}
+  (taken[L.tech]=taken[L.tech]||[]).push([a,a+dm]);
+  var inp=$('[data-cv="'+it.id+'"][data-f="start"]'); if(inp) inp.value=String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0');});
+ updAvail(); if(!bad) toast('Open times filled in');
+}
+function schedDoc(c,rows){
+ var first=(c.name||'').replace(' (example)','').split(' ')[0]||'there';
+ var when=function(r){var a=toMin(r.start); return longDate(r.date)+', '+fmtMin(a)+' – '+fmtMin(a+Math.round(num(r.dur)*60));};
+ var tr=rows.map(function(r){return '<tr><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2">'+esc(r.svc)+'</td><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2">'+esc(when(r))+'</td><td style="padding:6px 8px;border-bottom:1px solid #e3e8e2">'+esc(r.tech)+'</td></tr>';}).join('');
+ var html='<div style="font-family:Arial,Helvetica,sans-serif;color:#1b2420;max-width:640px;margin:0 auto"><h2 style="margin:0 0 2px">'+esc(C.business)+'</h2><div style="color:#6b7770;margin-bottom:16px">'+esc(C.businessPhone||'')+'</div><h3 style="margin:0 0 8px">Your service is scheduled</h3><p style="margin:0 0 12px">Hi '+esc(first)+', we have you on the calendar at '+esc(c.address||'your address')+':</p><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="background:#f0f4ef"><th style="text-align:left;padding:6px 8px">Service</th><th style="text-align:left;padding:6px 8px">Date and time</th><th style="text-align:left;padding:6px 8px">Technician</th></tr>'+tr+'</table><p style="margin:12px 0 0">Need to change anything? Reply to this email'+(C.businessPhone?' or call '+esc(C.businessPhone):'')+'.</p></div>';
+ var text='Hi '+first+',\n\nYour service with '+C.business+' is scheduled at '+(c.address||'your address')+':\n\n'+rows.map(function(r){return '- '+r.svc+': '+when(r)+' with '+r.tech;}).join('\n')+'\n\nNeed to change anything? Reply to this email'+(C.businessPhone?' or call '+C.businessPhone:'')+'.\n\nThank you,\n'+C.business;
+ return {c:c,subject:C.business+' – your service is scheduled',html:html,text:text};
+}
 async function createJobs(eid){
  var e=S.estimates.find(function(x){return x.id===eid;}); if(!e) return;
- var date=$('#cvDate').value, start=$('#cvStart').value; if(!date||!start) return toast('Pick a date and start time');
- var n=0;
- for(var its=eItems(eid), k=0;k<its.length;k++){var it=its[k];
-  var tsel=$('[data-cv="'+it.id+'"][data-f="tech"]'), dsel=$('[data-cv="'+it.id+'"][data-f="dur"]');
-  var jr=await sb.from('gl_jobs').insert({customer_id:e.customer_id,svc:JOBTYPES.indexOf(it.job_type)>=0?it.job_type:'Other',notes:it.description+' (from '+estNo(e)+')',tech_id:(tsel&&tsel.value)||null,status:'Scheduled',date:date,start_time:start,dur:Math.max(.25,num(dsel&&dsel.value)||1)}).select().single();
+ var date=$('#cvDate').value; if(!date) return toast('Pick a date');
+ var its=eItems(eid), rows=[], n=0, k;
+ for(k=0;k<its.length;k++){ if(!lineVals(its[k].id).start) return toast('Pick a start time for '+its[k].description); }
+ for(k=0;k<its.length;k++){ var it=its[k], L=lineVals(it.id);
+  var jr=await sb.from('gl_jobs').insert({customer_id:e.customer_id,svc:JOBTYPES.indexOf(it.job_type)>=0?it.job_type:'Other',notes:it.description+' (from '+estNo(e)+')',tech_id:L.tech||null,status:'Scheduled',date:date,start_time:L.start,dur:L.dur}).select().single();
   if(jr.error){toast('Job not created: '+jr.error.message); break;}
   var ii=await sb.from('gl_invoice_items').insert({job_id:jr.data.id,description:it.description,qty:it.qty,unit_price:it.unit_price,added_by:S.me&&S.me.id||null});
   if(ii.error) toast('Invoice line not saved: '+ii.error.message);
-  await sb.from('gl_estimate_items').update({job_id:jr.data.id}).eq('id',it.id); n++;}
+  await sb.from('gl_estimate_items').update({job_id:jr.data.id}).eq('id',it.id);
+  rows.push({svc:it.description,tech:L.tech?((tech(L.tech)||{}).name||'To be assigned'):'To be assigned',date:date,start:L.start,dur:L.dur}); n++; }
  if(n===its.length) await sb.from('gl_estimates').update({status:'Converted'}).eq('id',eid);
- S.panel=null; d.close(); await reload(); if(n) toast(n+' job order'+(n>1?'s':'')+' created – see them on the Calendar');
+ var mailOn=$('#cvMail')&&$('#cvMail').checked, em=(($('#cvEmail')||{}).value||'').trim(), c0=cust(e.customer_id);
+ S.panel=null; S.draft=null;
+ var ox=$('#ordDlg'); if(ox) ox.showModal();
+ if(n&&em&&em!==c0.email) await sb.from('gl_customers').update({email:em}).eq('id',e.customer_id);
+ await reload();
+ if(n) toast(n+' job order'+(n>1?'s':'')+' created');
+ if(n&&mailOn) await sendDoc(schedDoc(Object.assign({},c0,{email:em||c0.email}),rows));
 }
 async function savePay(jid,full){
  var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return;
@@ -494,7 +620,8 @@ var onClick=async function(ev){
  var b=ev.target.closest('[data-act]'); if(!b||b.tagName==='SELECT') return; var a=b.dataset.act, id=b.dataset.id;
  if(a==='enew'){openEditor(null);}
  else if(a==='eedit'){openEditor(S.estimates.find(function(x){return x.id===id;}));}
- else if(a==='ecancel'){S.draft=null;S.panel=null;d.close();render();}
+ else if(a==='ecancel'){S.draft=null;S.panel=null;finish();render();}
+ else if(a==='openpage'){openPage(id);}
  else if(a==='ladd'){S.draft.lines.push(newLine());render();}
  else if(a==='lrem'){S.draft.lines.splice(+id,1); if(!S.draft.lines.length) S.draft.lines.push(newLine()); render();}
  else if(a==='esave'){await saveEstimate(false);}
@@ -502,9 +629,10 @@ var onClick=async function(ev){
  else if(a==='esend'){await sendEstimate(id);}
  else if(a==='eprint'){printDoc(estDoc(S.estimates.find(function(x){return x.id===id;})));}
  else if(a==='eappr'||a==='edecl'){var r=await sb.from('gl_estimates').update({status:a==='eappr'?'Approved':'Declined'}).eq('id',id); if(r.error) toast(r.error.message); await reload();}
- else if(a==='econv'){S.draft=null;S.panel={type:'cv',id:id};d.showModal();render();}
+ else if(a==='econv'){S.draft=null;S.panel={type:'cv',id:id};$('#estDlg').showModal();render();}
  else if(a==='cvgo'){await createJobs(id);}
- else if(a==='pclose'){var wasCv=S.panel&&S.panel.type==='cv'; S.panel=null; if(wasCv) d.close(); render();}
+ else if(a==='cvsuggest'){suggest(id);}
+ else if(a==='pclose'){var wasCv=S.panel&&S.panel.type==='cv'; S.panel=null; if(wasCv) finish(); render();}
  else if(a==='ipay'){S.panel={type:'pay',id:id};render(); body.scrollTop=0; d.scrollTop=0;}
  else if(a==='psave'){await savePay(id,false);}
  else if(a==='pfull'){await savePay(id,true);}
@@ -517,6 +645,7 @@ var onClick=async function(ev){
 };
 var onChange=async function(ev){
  var t=ev.target;
+ if(t.dataset.cv!==undefined||t.id==='cvDate'){updAvail();return;}
  if(t.dataset.act==='ifilter'){S.filter=t.value;render();return;}
  if(t.dataset.act==='jtech'){var r=await sb.from('gl_jobs').update({tech_id:t.value||null}).eq('id',t.dataset.id); if(r.error) toast(r.error.message); else toast('Technician updated'); await reload(); return;}
  if(t.dataset.cat){var v=t.type==='number'?num(t.value):t.value.trim(); if(t.dataset.f==='name'&&!v) return reload(); var p={}; p[t.dataset.f]=v; var r4=await sb.from('gl_services').update(p).eq('id',t.dataset.cat); if(r4.error) toast(r4.error.message); else toast('Saved'); await reload(); return;}
@@ -527,8 +656,8 @@ var onChange=async function(ev){
   l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
 };
 body.addEventListener('click',onClick); body.addEventListener('change',onChange);
-document.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('#invDash')) onClick(ev);});
-document.addEventListener('change',function(ev){if(ev.target.closest&&ev.target.closest('#invDash')) onChange(ev);});
+document.addEventListener('click',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody')) onClick(ev);});
+document.addEventListener('change',function(ev){if(ev.target.closest&&ev.target.closest('#invDash,#estBody,#ordBody')) onChange(ev);});
 body.addEventListener('input',function(ev){
  var t=ev.target; if(!S.draft) return;
  if(t.id==='edNotes') S.draft.notes=t.value;
@@ -536,6 +665,7 @@ body.addEventListener('input',function(ev){
  else if(t.dataset.i!==undefined&&t.tagName==='INPUT'){var l=S.draft.lines[+t.dataset.i], f=t.dataset.f; l[f]=t.type==='number'?num(t.value):t.value; if(f==='qty'||f==='unit_price') $('#edTotal').textContent=money(S.draft.lines.reduce(function(a,x){return a+num(x.qty)*num(x.unit_price);},0));}
 });
 d.addEventListener('click',function(ev){if(ev.target.closest('[data-close]')) d.close();});
+['est','ord'].forEach(function(k){var b2=$('#'+k+'Btn'); if(b2) b2.addEventListener('click',function(){S.draft=null;S.panel=null;$('#'+k+'Dlg').showModal();render();reload().catch(function(){});});});
 var dvEl=$('#dashView'); if(dvEl) new MutationObserver(onDashMut).observe(dvEl,{childList:true}); setTimeout(onDashMut,1500);
 var btn=$('#invBtn'); if(btn) btn.addEventListener('click',function(){S.draft=null;S.panel=null;d.showModal();body.innerHTML='<p class="note">Loading…</p>';reload().catch(function(e){body.innerHTML='<p class="err">Could not load: '+esc(e.message)+'</p>';});});
 })();
