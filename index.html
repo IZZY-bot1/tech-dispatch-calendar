@@ -537,7 +537,7 @@ function invCard(){
  var jobs=S.jobs.filter(function(j){return j.status!=='Canceled'&&itemsOf(j.id).length;});
  var billed=0,paid=0; jobs.forEach(function(j){var t=jobTotal(j); billed+=t; paid+=Math.min(num(j.amount_paid),t);});
  var due=jobs.filter(function(j){return jobTotal(j)-num(j.amount_paid)>0.004;}).slice(0,5);
- var rows=due.map(function(j){var c=cust(j.customer_id);return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+money(Math.max(0,jobTotal(j)-num(j.amount_paid)))+'</td><td>'+pill(j.pay_status||'Unpaid')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Send invoice</button></td></tr>';}).join('');
+ var rows=due.map(function(j){var c=cust(j.customer_id);return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'</td><td>'+money(Math.max(0,jobTotal(j)-num(j.amount_paid)))+'</td><td>'+pill(j.pay_status||'Unpaid')+'</td><td class="iacts"><button class="btn sm primary" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Email invoice</button><button class="btn sm primary" data-act="itext" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Text invoice</button></td></tr>';}).join('');
  return '<section class="invcard"><div class="invhead"><h3>Invoices</h3><button class="btn" data-act="openpage" data-id="inv">View all</button></div><div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="6" class="note">Nothing outstanding.</td></tr>')+'</table></div></section>';
 }
 function dashHtml(){
@@ -573,8 +573,8 @@ function invTab(){
  var billed=0,paid=0; all.forEach(function(j){billed+=jobTotal(j); paid+=Math.min(num(j.amount_paid),jobTotal(j));});
  var opts='<option value="">All customers</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===S.filter?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
  var rows=jobs.map(function(j){var c=cust(j.customer_id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
-  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Send invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
- return '<div class="invhead"><h3>Invoices</h3><span class="note">Send is available once a job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+moreBar(all,jobs);
+  return '<tr><td>'+esc(invNo(j))+'</td><td>'+esc(c.name||'')+'</td><td>'+esc(j.svc)+'<br><span class="note">'+esc(longDate(j.date))+'</span><br><span class="note">'+esc(itemsOf(j.id).map(function(i){return i.description;}).join(', '))+'</span></td><td>'+money(tot)+'</td><td>'+money(j.amount_paid)+'</td><td>'+money(bal)+'</td><td>'+pill(j.pay_status||'Unpaid')+(j.invoice_sent_at?'<br><span class="note">Sent '+esc(new Date(j.invoice_sent_at).toLocaleDateString())+'</span>':'')+'</td><td class="iacts"><button class="btn sm primary" data-act="isend" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Email invoice</button><button class="btn sm primary" data-act="itext" data-id="'+j.id+'"'+(j.status==='Completed'?'':' disabled title="Available once the job is Completed"')+'>Text invoice</button><button class="btn sm" data-act="ipay" data-id="'+j.id+'">Payment</button><button class="btn sm" data-act="iprint" data-id="'+j.id+'">Print</button></td></tr>';}).join('');
+ return '<div class="invhead"><h3>Invoices</h3><span class="note">Email or text the invoice to the customer once the job is Completed.</span><select data-act="ifilter">'+opts+'</select><button class="btn primary" data-act="inew">+ New invoice</button></div>'+filterBar()+'<div class="invstats"><span>Billed <b>'+money(billed)+'</b></span><span>Paid <b>'+money(paid)+'</b></span><span>Outstanding <b>'+money(billed-paid)+'</b></span></div><div class="scroll"><table class="tbl"><tr><th>Invoice</th><th>Customer</th><th>Service</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>'+(rows||'<tr><td colspan="8" class="note">'+(hasF()?'No invoices match your search or filters.':'No invoices yet. Use + New invoice to create one.')+'</td></tr>')+'</table></div>'+moreBar(all,jobs);
 }
 function hasF(){return !!(S.ifq||S.ist||S.ipay||S.itech||S.idate||S.idto||S.filter);}
 function invFiltered(){
@@ -794,6 +794,21 @@ async function savePay(jid,full){
  var r=await sb.from('gl_jobs').update(patch).eq('id',jid); if(r.error) return toast(r.error.message);
  S.panel=null; await reload(); toast('Payment saved');
 }
+function invText(j){
+ var c=cust(j.customer_id), its=itemsOf(j.id), tot=jobTotal(j), bal=Math.max(0,tot-num(j.amount_paid));
+ return 'Hi '+(c.name||'')+', your invoice '+invNo(j)+' from '+C.business+' is ready.\n'+its.map(function(i){return '- '+i.description+' x'+num(i.qty)+': '+money(num(i.qty)*num(i.unit_price));}).join('\n')+'\nTotal: '+money(tot)+(num(j.amount_paid)?'\nPaid: '+money(j.amount_paid):'')+'\nBalance due: '+money(bal)+(C.businessPhone?'\nQuestions? Call '+C.businessPhone+'.':'')+'\nThank you!';
+}
+async function textInvoice(id){
+ var j=S.jobs.find(function(x){return x.id===id;}); if(!j) return;
+ if(j.status!=='Completed') return toast('Invoices can be sent once the job is Completed.');
+ var c=cust(j.customer_id), ph=String(c.phone||'').replace(/\D/g,'');
+ if(!ph) return toast('No phone number on file for '+(c.name||'this customer'));
+ var body=invText(j);
+ window.location.href='sms:'+ph+'?&body='+encodeURIComponent(body);
+ await sb.from('gl_messages').insert({job_id:j.id,customer_id:j.customer_id,sender_id:(S.me&&S.me.id)||null,channel:'sms',body:body});
+ await sb.from('gl_jobs').update({invoice_sent_at:new Date().toISOString()}).eq('id',j.id);
+ toast('Text ready in your messaging app'); await reload();
+}
 async function sendInvoice(jid){
  var j=S.jobs.find(function(x){return x.id===jid;}); if(!j) return; if(j.status!=='Completed') return toast('Invoices can be sent once the job is Completed.'); var doc=invDoc(j);
  if(await sendDoc(doc)){var now=new Date().toISOString();
@@ -831,6 +846,7 @@ var onClick=async function(ev){
  else if(a==='psave'){await savePay(id,false);}
  else if(a==='pfull'){await savePay(id,true);}
  else if(a==='isend'){await sendInvoice(id);}
+ else if(a==='itext'){await textInvoice(id);}
  else if(a==='iprint'){printDoc(invDoc(S.jobs.find(function(x){return x.id===id;})));}
  else if(a==='cseed'){await seed();}
  else if(a==='cadd'){var nm=$('#nsName').value.trim(); if(!nm) return toast('Enter a service name');
