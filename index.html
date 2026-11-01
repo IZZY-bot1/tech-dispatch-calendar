@@ -609,6 +609,9 @@ function moreBar(all,shown){
  +(all.length>shown.length?'<button class="btn sm" data-act="imore">Show 10 more</button><button class="btn sm" data-act="iall">Show all</button>':'')
  +(S.ilim>10&&shown.length>10?'<button class="btn sm" data-act="ifewer">Show fewer</button>':'')+'</div>';
 }
+function nvMatches(svc){return S.services.filter(function(x){return x.active!==false&&x.job_type===svc;});}
+function nvPick(svc){var m=nvMatches(svc); return m.length?m:S.services.filter(function(x){return x.active!==false;});}
+function nvAuto(){var P=S.panel; if(!P||P.type!=='inew') return; var l=P.lines[0]; if(!l) return; if(String(l.description||'').trim()&&!l.auto) return; var m=nvMatches(P.svc); if(m.length){l.description=m[0].name;l.unit_price=num(m[0].unit_price);l.auto=true;l.pa=true;} else if(l.auto){l.description='';l.unit_price=0;l.auto=false;}}
 function nvLine(){return {description:'',qty:1,unit_price:0};}
 function nvSum(){return S.panel.lines.reduce(function(a,l){return a+num(l.qty)*num(l.unit_price);},0);}
 function newInvHtml(){
@@ -616,9 +619,9 @@ function newInvHtml(){
  var cs='<option value="">Select customer</option>'+S.customers.map(function(c){return '<option value="'+c.id+'"'+(c.id===P.customer_id?' selected':'')+'>'+esc(c.name)+'</option>';}).join('');
  var ts='<option value="">Unassigned</option>'+S.staff.filter(function(x){return x.active!==false;}).map(function(x){return '<option value="'+x.id+'"'+(x.id===P.tech_id?' selected':'')+'>'+esc(x.name)+'</option>';}).join('');
  var ty=JOBTYPES.map(function(x){return '<option'+(x===P.svc?' selected':'')+'>'+esc(x)+'</option>';}).join('');
- var dl='<datalist id="nvSvc">'+S.services.filter(function(x){return x.active!==false;}).map(function(x){return '<option value="'+esc(x.name)+'">'+esc(money(x.unit_price))+'</option>';}).join('')+'</datalist>';
+ var dl='<datalist id="nvSvc">'+nvPick(P.svc).map(function(x){return '<option value="'+esc(x.name)+'">'+esc(money(x.unit_price))+'</option>';}).join('')+'</datalist>';
  var rows=P.lines.map(function(l,i){return '<tr><td><input data-nl="'+i+'" data-f="description" list="nvSvc" placeholder="Service / description" value="'+esc(l.description)+'"></td><td><input data-nl="'+i+'" data-f="qty" type="number" min="0" step="0.25" value="'+num(l.qty)+'"></td><td><input data-nl="'+i+'" data-f="unit_price" type="number" min="0" step="0.01" value="'+num(l.unit_price)+'"></td><td class="nvt">'+money(num(l.qty)*num(l.unit_price))+'</td><td><button class="btn sm" data-act="inrem" data-id="'+i+'" title="Remove line">&times;</button></td></tr>';}).join('');
- return '<div class="invpanel"><h3>New invoice</h3><div class="row"><label>Customer<select id="nvCust">'+cs+'</select></label><label>Technician<select id="nvTech">'+ts+'</select></label></div><div class="row"><label>Job type<select id="nvType">'+ty+'</select></label><label>Service date<input id="nvDate" type="date" value="'+esc(P.date)+'"></label></div>'
+ return '<div class="invpanel"><h3>New invoice</h3><div class="row"><label>Customer<select id="nvCust">'+cs+'</select></label><label>Technician<select id="nvTech">'+ts+'</select></label></div><div class="row"><label>Job type (fills price from Service Catalog)<select id="nvType">'+ty+'</select></label><label>Service date<input id="nvDate" type="date" value="'+esc(P.date)+'"></label></div>'
  +dl+'<div class="scroll"><table class="tbl nvl"><tr><th>Service</th><th>Qty</th><th>Price ($)</th><th>Total</th><th></th></tr>'+rows+'</table></div>'
  +'<div class="invmore"><button class="btn sm" data-act="inadd">+ Add service line</button><span>Total <b id="nvTotal">'+money(nvSum())+'</b></span></div>'
  +'<div class="invmore"><button class="btn primary" data-act="increate">Create invoice</button><button class="btn" data-act="inclose">Cancel</button><span class="note">Creates the job and its billed services. It can be sent once the job is Completed.</span></div></div>';
@@ -860,7 +863,7 @@ if(nvBody){
  var redo=function(){S.__force=true;render();};
  nvBody.addEventListener('click',function(ev){
   var b=ev.target.closest('[data-act]'); if(!b) return; var a=b.dataset.act;
-  if(a==='inew'){S.draft=null;S.panel={type:'inew',customer_id:S.filter||'',tech_id:'',svc:JOBTYPES[0]||'Other',date:iso(),lines:[nvLine()]};redo();nvBody.scrollTop=0;d.scrollTop=0;}
+  if(a==='inew'){S.draft=null;S.panel={type:'inew',customer_id:S.filter||'',tech_id:'',svc:JOBTYPES[0]||'Other',date:iso(),lines:[nvLine()]};nvAuto();redo();nvBody.scrollTop=0;d.scrollTop=0;}
   else if(a==='inclose'){S.panel=null;redo();}
   else if(a==='inadd'){readNv();S.panel.lines.push(nvLine());redo();}
   else if(a==='inrem'){readNv();S.panel.lines.splice(+b.dataset.id,1);if(!S.panel.lines.length)S.panel.lines.push(nvLine());redo();}
@@ -876,7 +879,7 @@ if(nvBody){
   if(t.dataset.nl!==undefined&&S.panel&&S.panel.type==='inew'){
    readNv();
    var i=+t.dataset.nl, l=S.panel.lines[i];
-   if(t.dataset.f==='description'){var m=S.services.find(function(x){return x.name===t.value;}); if(m&&!num(l.unit_price)){l.unit_price=num(m.unit_price); var p=$('[data-nl="'+i+'"][data-f="unit_price"]'); if(p) p.value=l.unit_price;}}
+   if(t.dataset.f==='description'){l.auto=false; var m=S.services.find(function(x){return x.name===t.value;}); if(m&&(!num(l.unit_price)||l.pa)){l.unit_price=num(m.unit_price); l.pa=true; var p=$('[data-nl="'+i+'"][data-f="unit_price"]'); if(p) p.value=l.unit_price;}} else if(t.dataset.f==='unit_price'){l.pa=false;}
    var row=t.closest('tr'); if(row){var c=row.querySelector('.nvt'); if(c) c.textContent=money(num(l.qty)*num(l.unit_price));}
    var tt=$('#nvTotal'); if(tt) tt.textContent=money(nvSum());
   }
@@ -884,7 +887,7 @@ if(nvBody){
  nvBody.addEventListener('change',function(ev){
   var t=ev.target;
   if(t.dataset.if){S[t.dataset.if]=t.value; S.ilim=10; redo();}
-  else if(t.id==='nvCust'||t.id==='nvTech'||t.id==='nvType'||t.id==='nvDate'){readNv();}
+  else if(t.id==='nvType'){readNv();nvAuto();redo();} else if(t.id==='nvCust'||t.id==='nvTech'||t.id==='nvDate'){readNv();}
  });
 }
 var ordB=$('#ordBody');
